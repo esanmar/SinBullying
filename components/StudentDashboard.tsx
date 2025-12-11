@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { createCase, uploadFile, getCasesByStudent, sendVerificationCode, verifyOTP } from '../services/bkndService';
-import { Upload, CheckCircle, AlertTriangle, FileText, Calendar } from './Icons';
+import { createCase, uploadFile, getCasesByStudent, sendVerificationCode, verifyOTP, getTechnicians } from '../services/bkndService';
+import { Upload, CheckCircle, AlertTriangle, FileText, Calendar, MessageCircle } from './Icons';
 import { User, Evidence, BullyingCase } from '../types';
 
 interface Props {
@@ -19,6 +19,7 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
 
   // History State
   const [myCases, setMyCases] = useState<BullyingCase[]>([]);
+  const [technicians, setTechnicians] = useState<User[]>([]);
 
   const [formData, setFormData] = useState({
     description: '',
@@ -31,10 +32,13 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
 
   useEffect(() => {
     if (activeTab === 'history') {
+      // Fetch cases
       getCasesByStudent(user.id).then(data => {
         data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setMyCases(data);
       });
+      // Fetch technicians to resolve assignments
+      getTechnicians().then(setTechnicians);
     }
   }, [activeTab, user.id]);
 
@@ -106,6 +110,12 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getWhatsAppLink = (phone: string, caseId: string) => {
+    const cleanPhone = phone.replace(/\D/g, ''); // Remove non-digits
+    const message = encodeURIComponent(`Hola, soy el estudiante del caso #${caseId}. Me gustaría hablar con usted.`);
+    return `https://wa.me/${cleanPhone}?text=${message}`;
   };
 
   if (success) {
@@ -360,29 +370,47 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
                       <p className="text-gray-500">No has enviado ningún reporte todavía.</p>
                   </div>
               ) : (
-                  myCases.map(c => (
-                      <div key={c.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
-                          <div>
-                              <div className="flex items-center space-x-2 mb-1">
-                                  <span className={`px-2 py-0.5 rounded text-xs uppercase font-bold ${
-                                      c.status === 'resuelto' ? 'bg-green-100 text-green-700' :
-                                      c.status === 'revision' ? 'bg-yellow-100 text-yellow-700' :
-                                      'bg-gray-100 text-gray-700'
-                                  }`}>
-                                      {c.status}
-                                  </span>
-                                  <span className="text-xs text-gray-400">
-                                      {new Date(c.createdAt).toLocaleDateString()}
-                                  </span>
-                              </div>
-                              <p className="font-medium text-gray-800">{c.description.substring(0, 60)}...</p>
-                              <div className="flex items-center mt-1 text-xs text-gray-500">
-                                  <Calendar className="w-3 h-3 mr-1" />
-                                  {c.dateOfIncident}
-                              </div>
-                          </div>
-                      </div>
-                  ))
+                  myCases.map(c => {
+                      // Find assigned technician
+                      const assignedTech = technicians.find(t => t.id === c.assignedTechnicianId);
+                      
+                      return (
+                        <div key={c.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                            <div>
+                                <div className="flex items-center space-x-2 mb-1">
+                                    <span className={`px-2 py-0.5 rounded text-xs uppercase font-bold ${
+                                        c.status === 'resuelto' ? 'bg-green-100 text-green-700' :
+                                        c.status === 'revision' ? 'bg-yellow-100 text-yellow-700' :
+                                        'bg-gray-100 text-gray-700'
+                                    }`}>
+                                        {c.status}
+                                    </span>
+                                    <span className="text-xs text-gray-400">
+                                        {new Date(c.createdAt).toLocaleDateString()}
+                                    </span>
+                                </div>
+                                <p className="font-medium text-gray-800">{c.description.substring(0, 60)}...</p>
+                                <div className="flex items-center mt-1 text-xs text-gray-500">
+                                    <Calendar className="w-3 h-3 mr-1" />
+                                    {c.dateOfIncident}
+                                </div>
+                            </div>
+                            
+                            {/* WhatsApp Button - Only if tech is assigned and has phone */}
+                            {assignedTech && assignedTech.phone && (
+                                <a 
+                                    href={getWhatsAppLink(assignedTech.phone, c.id)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition shadow-sm w-full md:w-auto"
+                                >
+                                    <MessageCircle className="w-5 h-5" />
+                                    <span className="font-semibold text-sm">Chat con Técnico</span>
+                                </a>
+                            )}
+                        </div>
+                      );
+                  })
               )}
           </div>
       )}
