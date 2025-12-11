@@ -4,6 +4,7 @@ import { getCurrentUser, login, logout } from './services/bkndService';
 import { User, Role } from './types';
 import StudentDashboard from './components/StudentDashboard';
 import AdminDashboard from './components/AdminDashboard';
+import TechnicianDashboard from './components/TechnicianDashboard'; // New Import
 import { Shield, LogOut } from './components/Icons';
 
 // --- LOGIN COMPONENT ---
@@ -11,15 +12,17 @@ const LoginScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<Role>('student');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     try {
       const user = await login(email, role);
       onLogin(user);
-    } catch (e) {
-      alert("Error al iniciar sesión");
+    } catch (e: any) {
+      setError(e.message || "Error al iniciar sesión");
     } finally {
       setIsLoading(false);
     }
@@ -51,11 +54,11 @@ const LoginScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Soy...</label>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setRole('student')}
-                className={`py-3 px-4 rounded-lg border-2 font-medium transition ${
+                className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
                   role === 'student' 
                   ? 'border-brand-500 bg-brand-50 text-brand-700' 
                   : 'border-gray-200 text-gray-500 hover:border-gray-300'
@@ -65,17 +68,34 @@ const LoginScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
               </button>
               <button
                 type="button"
+                onClick={() => setRole('technician')}
+                className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
+                  role === 'technician' 
+                  ? 'border-brand-500 bg-brand-50 text-brand-700' 
+                  : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                }`}
+              >
+                Técnico
+              </button>
+              <button
+                type="button"
                 onClick={() => setRole('admin')}
-                className={`py-3 px-4 rounded-lg border-2 font-medium transition ${
+                className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
                   role === 'admin' 
                   ? 'border-brand-500 bg-brand-50 text-brand-700' 
                   : 'border-gray-200 text-gray-500 hover:border-gray-300'
                 }`}
               >
-                Administrador
+                Admin
               </button>
             </div>
           </div>
+            
+          {error && (
+              <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                  {error}
+              </div>
+          )}
 
           <button 
             type="submit" 
@@ -106,8 +126,12 @@ const DashboardLayout = ({ children, user, onLogout }: { children?: React.ReactN
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500 hidden sm:block">Hola, {user.name}</span>
-              <span className={`px-2 py-1 rounded text-xs uppercase font-bold tracking-wide ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                {user.role === 'admin' ? 'Admin' : 'Estudiante'}
+              <span className={`px-2 py-1 rounded text-xs uppercase font-bold tracking-wide ${
+                  user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 
+                  user.role === 'technician' ? 'bg-orange-100 text-orange-700' :
+                  'bg-blue-100 text-blue-700'
+                }`}>
+                {user.role === 'admin' ? 'Admin' : user.role === 'technician' ? 'Técnico' : 'Estudiante'}
               </span>
               <button 
                 onClick={onLogout}
@@ -159,7 +183,9 @@ const App = () => {
         <Route path="/" element={
           user ? (
             <DashboardLayout user={user} onLogout={handleLogout}>
-              {user.role === 'admin' ? <AdminDashboard /> : <StudentDashboard user={user} />}
+              {user.role === 'admin' ? <AdminDashboard /> : 
+               user.role === 'technician' ? <TechnicianDashboard user={user} /> :
+               <StudentDashboard user={user} />}
             </DashboardLayout>
           ) : (
             <Navigate to="/login" />

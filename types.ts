@@ -1,4 +1,4 @@
-export type Role = 'student' | 'admin';
+export type Role = 'student' | 'admin' | 'technician';
 
 export type CaseStatus = 'pendiente' | 'revision' | 'resuelto';
 
@@ -7,6 +7,10 @@ export interface User {
   name: string;
   email: string;
   role: Role;
+  // Campos adicionales para técnicos
+  lastName?: string;
+  phone?: string;
+  center?: string;
 }
 
 export interface Evidence {
@@ -30,6 +34,7 @@ export interface BullyingCase {
   createdAt: string;
   updatedAt: string;
   adminNotes?: string;
+  assignedTechnicianId?: string | null; // Nuevo campo para asignación
 }
 
 export interface DashboardStats {
@@ -37,4 +42,5 @@ export interface DashboardStats {
   pending: number;
   resolved: number;
   recent: number;
+  technicians?: number;
 }
