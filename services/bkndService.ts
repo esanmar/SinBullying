@@ -6,9 +6,36 @@ const CASES_KEY = 'sinbullying_cases';
 const CURRENT_USER_KEY = 'sinbullying_current_user';
 const OTPS_KEY = 'sinbullying_otps';
 
-// SIMULATE ENVIRONMENT VARIABLE
-// En un entorno real (Vercel), esto vendría de process.env.ADMIN_EMAIL
-const ENV_ADMIN_EMAIL = 'admin@sinbullying.edu'; 
+// ==========================================
+// CONFIGURACIÓN DEL ADMINISTRADOR
+// ==========================================
+// Define aquí el email del único administrador autorizado.
+// El sistema intentará buscar variables de entorno primero, o usará el valor por defecto.
+const getAdminEmail = () => {
+  try {
+    // Soporte para Create React App / Webpack
+    // @ts-ignore
+    if (typeof process !== 'undefined' && process.env?.REACT_APP_ADMIN_EMAIL) {
+      // @ts-ignore
+      return process.env.REACT_APP_ADMIN_EMAIL;
+    }
+    // Soporte para Vite
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADMIN_EMAIL) {
+      // @ts-ignore
+      return import.meta.env.VITE_ADMIN_EMAIL;
+    }
+  } catch (e) {
+    // Ignorar errores de acceso a variables en entornos restringidos
+  }
+  
+  // --- VALOR POR DEFECTO (Cámbialo aquí si no usas variables de entorno) ---
+  return 'admin@sinbullying.edu';
+};
+
+const ENV_ADMIN_EMAIL = getAdminEmail();
+// ==========================================
+
 
 // Initialize Mock Data if empty
 const initMockData = () => {
@@ -59,7 +86,7 @@ export const login = async (email: string, role: Role): Promise<User> => {
   // SINGLE ADMIN CHECK
   if (role === 'admin') {
     if (email.toLowerCase() !== ENV_ADMIN_EMAIL.toLowerCase()) {
-      throw new Error("Credenciales de administrador inválidas. Contacte con IT.");
+      throw new Error(`Acceso denegado. Solo el administrador autorizado (${ENV_ADMIN_EMAIL}) puede ingresar.`);
     }
   }
 
