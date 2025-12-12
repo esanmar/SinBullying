@@ -1,10 +1,22 @@
 
 import { sql } from '@vercel/postgres';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-// Inicializamos Resend fuera del handler para reutilizar la conexión si es posible
-// Se usará solo si existe la API KEY
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+// Configurar transporter de nodemailer
+let transporter = null;
+
+// Inicializar transporter solo si están configuradas las variables SMTP
+if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+  transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: process.env.SMTP_SECURE === 'true', // true para puerto 465, false para otros
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
 
 export const config = {
   runtime: 'nodejs',
@@ -56,10 +68,10 @@ export default async function handler(req) {
       const newCase = rows[0];
 
       // --- EMAIL NOTIFICATION LOGIC ---
-      if (resend && process.env.ADMIN_EMAIL) {
+      if (transporter && process.env.ADMIN_EMAIL) {
           try {
-            await resend.emails.send({
-              from: 'SinBullying Alertas <onboarding@resend.dev>', // Usa onboarding@resend.dev si no tienes dominio propio verificado
+            await transporter.sendMail({
+              from: process.env.SMTP_FROM || `"SinBullying Alertas" <${process.env.SMTP_USER}>`,
               to: process.env.ADMIN_EMAIL,
               subject: `🚨 Nuevo Reporte de Bullying #${newCase.id.slice(0, 8)}`,
               html: `
@@ -82,7 +94,7 @@ export default async function handler(req) {
             });
             console.log("Email de alerta enviado a admin");
           } catch (emailError) {
-            console.error("Error enviando email Resend:", emailError);
+            console.error("Error enviando email:", emailError);
             // No fallamos el request si falla el email, solo lo logueamos
           }
       }

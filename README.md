@@ -33,7 +33,7 @@ Este proyecto está diseñado para funcionar **100% gratis** utilizando las capa
   - **Alojamiento Web:** Despliegue global en la Edge Network.
   - **Base de Datos:** Vercel Postgres (hasta 256MB).
   - **Almacenamiento de Archivos:** **Vercel Blob (10GB)** para fotos y vídeos.
-- **Resend Free Tier:** 3,000 emails/mes para notificaciones.
+- **Emails:** SMTP directo con tu email (Gmail, Outlook, etc.) - Sin servicios externos.
 
 ---
 
@@ -52,13 +52,25 @@ Este proyecto está diseñado para funcionar **100% gratis** utilizando las capa
 
 Desplegar tu propia plataforma SinBullying es ahora más fácil que nunca.
 
-### 1. Preparar Email (Resend)
+### 1. Preparar Email (SMTP)
 
-Necesitas una cuenta de Resend para que el sistema envíe las alertas por email cuando se crea un nuevo caso.
+Necesitas configurar SMTP para que el sistema envíe alertas por email cuando se crea un nuevo caso.
 
-1.  Regístrate gratis en [Resend.com](https://resend.com).
-2.  Ve a la sección **API Keys** y crea una nueva clave. Cópiala para usarla más adelante.
-3.  (Opcional pero recomendado) Verifica tu dominio para que los emails no lleguen como spam. Si no lo haces, los emails solo llegarán a tu propia dirección de correo.
+**Opción A: Gmail (Recomendado para empezar)**
+1.  Ve a [Google Account Security](https://myaccount.google.com/security)
+2.  Activa "Verificación en dos pasos"
+3.  Ve a [App Passwords](https://myaccount.google.com/apppasswords)
+4.  Crea una contraseña de aplicación para "SinBullying"
+5.  Copia la contraseña de 16 caracteres
+
+**Opción B: Outlook**
+- Usa tu email y contraseña normal de Outlook
+- No requiere contraseña de aplicación
+
+**Opción C: Servidor SMTP propio**
+- Contacta con tu departamento de IT para obtener las credenciales
+
+Ver guía completa en: `scripts/setup-smtp.md`
 
 ### 2. Desplegar en Vercel (1-Click)
 
@@ -70,7 +82,13 @@ Durante el proceso, Vercel te pedirá:
 
 1.  **Crear un Repositorio Git:** Dale un nombre a tu nuevo repositorio (ej. `mi-plataforma-bullying`).
 2.  **Configurar el Proyecto:**
-    -   **Variables de Entorno:** Pega la `RESEND_API_KEY` que creaste y define el `ADMIN_EMAIL` donde quieres recibir los avisos.
+    -   **Variables de Entorno SMTP:**
+        - `SMTP_HOST` - Servidor SMTP (ej: `smtp.gmail.com`)
+        - `SMTP_PORT` - Puerto (normalmente `587`)
+        - `SMTP_SECURE` - `false` para puerto 587
+        - `SMTP_USER` - Tu email completo
+        - `SMTP_PASS` - Contraseña de aplicación (Gmail) o contraseña normal (Outlook)
+        - `ADMIN_EMAIL` - Email donde recibirás los avisos
     -   **Añadir Bases de Datos:** Vercel detectará que el proyecto necesita una base de datos Postgres y un almacenamiento Blob. **Acepta crear ambos**. Vercel los configurará y enlazará automáticamente.
 
 3.  **Desplegar:** Haz clic en el botón **Deploy**. El proceso tardará unos minutos.
