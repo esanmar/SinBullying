@@ -1,0 +1,35 @@
+{
+  "common": {
+    "submit": "Enviar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito"
+  },
+  "nav": {
+    "home": "Inicio",
+    "report": "Reportar Caso",
+    "admin": "Administración",
+    "technician": "Panel Técnico",
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión"
+  },
+  "report": {
+    "title": "Reportar un Caso de Bullying",
+    "description": "Descripción del incidente",
+    "severity": "Gravedad",
+    "anonymous": "Reporte anónimo",
+    "attachments": "Adjuntar evidencias",
+    "submit_success": "Reporte enviado correctamente",
+    "submit_error": "Error al enviar el reporte"
+  },
+  "admin": {
+    "title": "Panel de Administración",
+    "cases": "Casos",
+    "statistics": "Estadísticas",
+    "settings": "Configuración"
+  }
+}

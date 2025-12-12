@@ -1,0 +1,35 @@
+{
+  "common": {
+    "submit": "Enviar",
+    "cancel": "Cancel·lar",
+    "save": "Desar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "loading": "Carregant...",
+    "error": "Error",
+    "success": "Èxit"
+  },
+  "nav": {
+    "home": "Inici",
+    "report": "Reportar Cas",
+    "admin": "Administració",
+    "technician": "Panell Tècnic",
+    "login": "Iniciar Sessió",
+    "logout": "Tancar Sessió"
+  },
+  "report": {
+    "title": "Reportar un Cas de Bullying",
+    "description": "Descripció de l'incident",
+    "severity": "Gravetat",
+    "anonymous": "Informe anònim",
+    "attachments": "Adjuntar evidències",
+    "submit_success": "Informe enviat correctament",
+    "submit_error": "Error en enviar l'informe"
+  },
+  "admin": {
+    "title": "Panell d'Administració",
+    "cases": "Casos",
+    "statistics": "Estadístiques",
+    "settings": "Configuració"
+  }
+}
