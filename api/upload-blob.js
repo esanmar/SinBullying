@@ -1,7 +1,7 @@
 import { put } from '@vercel/blob';
 
 export const config = {
-  runtime: 'edge',
+  runtime: 'nodejs',
 };
 
 // Tipos MIME permitidos para evidencias
