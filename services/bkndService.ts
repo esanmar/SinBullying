@@ -82,18 +82,24 @@ export const getTechnicians = async (): Promise<User[]> => {
 // ==========================================
 
 export const uploadFile = async (file: File): Promise<Evidence> => {
-    // Usamos Vercel Blob vía API Route
-    const response = await fetch(`/api/upload?filename=${file.name}`, {
+    // Usamos Vercel Blob Storage vía API Route
+    const response = await fetch(`/api/upload-blob?filename=${encodeURIComponent(file.name)}`, {
         method: 'POST',
+        headers: {
+            'Content-Type': file.type,
+        },
         body: file,
     });
 
-    if (!response.ok) throw new Error('Error subiendo archivo');
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Error desconocido' }));
+        throw new Error(error.error || 'Error subiendo archivo');
+    }
 
     const blob = await response.json();
 
     return {
-        id: blob.url, // Usamos URL como ID en este caso simple
+        id: blob.pathname || blob.url,
         fileName: file.name,
         fileType: file.type,
         url: blob.url
