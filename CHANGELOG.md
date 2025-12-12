@@ -267,6 +267,6 @@ MIT License - Consulta el archivo `LICENSE` para más detalles.
 
 ---
 
-**Autor de las Mejoras:** Manus AI  
+**Autor de las Mejoras:** Eduardo  
 **Fecha:** Diciembre 2025  
 **Versión:** 2.0.0

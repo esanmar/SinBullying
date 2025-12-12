@@ -236,4 +236,4 @@ La plataforma está lista para ser desplegada y utilizada por instituciones educ
 
 **Versión:** 2.0.0  
 **Fecha:** Diciembre 2025  
-**Autor de las Mejoras:** Manus AI
+**Autor de las Mejoras:** Eduardo
