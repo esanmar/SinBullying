@@ -10,6 +10,7 @@ interface Props {
 const StudentDashboard: React.FC<Props> = ({ user }) => {
   const [activeTab, setActiveTab] = useState<'new' | 'history'>('new');
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [evidenceFiles, setEvidenceFiles] = useState<Evidence[]>([]);
   
@@ -42,18 +43,96 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
     }
   }, [activeTab, user.id]);
 
+  // --- IMAGE COMPRESSION UTILS ---
+  const compressImage = async (file: File): Promise<File> => {
+    // Si no es imagen o es muy pequeña, devolver original
+    if (!file.type.startsWith('image/') || file.size < 300 * 1024) return file;
+
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+            img.src = e.target?.result as string;
+        };
+        
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Max dimensions (HD 720p equivalent is usually enough for evidence)
+            const MAX_WIDTH = 1280; 
+            const MAX_HEIGHT = 1280;
+            
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            canvas.toBlob((blob) => {
+                if (!blob) {
+                    resolve(file); // Fallback
+                    return;
+                }
+                const compressedFile = new File([blob], file.name, {
+                    type: 'image/jpeg',
+                    lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+            }, 'image/jpeg', 0.7); // 70% Quality
+        };
+        
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+    });
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const filesArray = Array.from(e.target.files);
-      setLoading(true);
+      
+      // Validar límite total de archivos (Max 3 para ahorrar espacio en plan free)
+      if (evidenceFiles.length + filesArray.length > 3) {
+          alert("Para asegurar el rendimiento, máximo 3 archivos por reporte.");
+          return;
+      }
+
+      setUploading(true);
       try {
-        const uploaded = await Promise.all(filesArray.map(f => uploadFile(f as File)));
+        // Comprimir imágenes secuencialmente
+        const processedFiles = await Promise.all(
+            filesArray.map(async (f: File) => {
+                if (f.size > 4.5 * 1024 * 1024) {
+                    throw new Error(`El archivo ${f.name} es demasiado grande (Max 4.5MB)`);
+                }
+                return await compressImage(f);
+            })
+        );
+
+        const uploaded = await Promise.all(processedFiles.map(f => uploadFile(f)));
         setEvidenceFiles(prev => [...prev, ...uploaded]);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Upload failed", error);
-        alert("Error al subir archivo");
+        alert(error.message || "Error al subir archivo. Verifica el tamaño.");
       } finally {
-        setLoading(false);
+        setUploading(false);
+        // Reset input
+        e.target.value = '';
       }
     }
   };
@@ -275,18 +354,28 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Evidencias (Capturas, Fotos)
+                        Evidencias (Capturas, Fotos, PDF) - Máx 3
                         </label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer relative">
-                        <input 
-                            type="file" 
-                            multiple 
-                            accept="image/*,.pdf"
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            onChange={handleFileChange}
-                        />
-                        <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500">Toca para subir archivos</p>
+                        <div className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center transition cursor-pointer relative ${uploading ? 'bg-gray-100 border-gray-400' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}>
+                        {uploading ? (
+                            <div className="text-center">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600 mx-auto mb-2"></div>
+                                <p className="text-sm text-brand-600 font-medium">Optimizando y subiendo...</p>
+                            </div>
+                        ) : (
+                            <>
+                                <input 
+                                    type="file" 
+                                    multiple 
+                                    accept="image/*,.pdf"
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    onChange={handleFileChange}
+                                    disabled={uploading}
+                                />
+                                <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                                <p className="text-sm text-gray-500">Toca para subir archivos (Se comprimirán automáticamente)</p>
+                            </>
+                        )}
                         </div>
                         
                         {evidenceFiles.length > 0 && (
@@ -307,9 +396,9 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
                     <div className="pt-4">
                         <button
                         type="submit"
-                        disabled={loading}
+                        disabled={loading || uploading}
                         className={`w-full py-3 px-4 rounded-lg text-white font-medium text-lg transition shadow-md ${
-                            loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700'
+                            (loading || uploading) ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700'
                         }`}
                         >
                         {loading ? 'Procesando...' : 'Continuar a Verificación'}

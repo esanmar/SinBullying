@@ -1,0 +1,1 @@
+// This file is deprecated. Logic moved to services/bkndService.ts using Supabase Client.
