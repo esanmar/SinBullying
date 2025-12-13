@@ -1,32 +1,30 @@
 import { put } from '@vercel/blob';
 
+// Desactivamos el body parser para que el stream del archivo llegue intacto a la función
 export const config = {
-  runtime: 'edge',
+  api: {
+    bodyParser: false,
+  },
 };
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const url = new URL(req.url);
-    const filename = url.searchParams.get('filename') || 'file';
+    // Obtenemos el nombre del archivo de los query params
+    const filename = req.query.filename || 'file';
 
-    // Vercel Blob hace el proceso extremadamente sencillo.
-    // 'put' sube el stream directamente y devuelve la URL pública.
-    // 'access: public' permite que las imágenes se vean en el dashboard.
-    const blob = await put(filename, req.body, {
+    // Subimos el archivo directamente pasando el objeto 'req' (que es un stream en Node.js)
+    const blob = await put(filename, req, {
       access: 'public',
     });
 
-    return new Response(JSON.stringify(blob), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(200).json(blob);
 
   } catch (error) {
     console.error("Upload Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return res.status(500).json({ error: error.message });
   }
 }
