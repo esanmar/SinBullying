@@ -1,11 +1,6 @@
-
 import { sql } from '@vercel/postgres';
 
-export const config = {
-  runtime: 'edge',
-};
-
-export default async function handler(req) {
+export default async function handler(req, res) {
   try {
     // GET: List all cases
     if (req.method === 'GET') {
@@ -28,15 +23,12 @@ export default async function handler(req) {
         updatedAt: r.updated_at
       }));
 
-      return new Response(JSON.stringify(cases), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return res.status(200).json(cases);
     }
 
     // POST: Create new case
     if (req.method === 'POST') {
-      const data = await req.json();
+      const data = req.body;
       
       const { rows } = await sql`
         INSERT INTO cases (
@@ -50,15 +42,12 @@ export default async function handler(req) {
 
       const newCase = rows[0];
 
-      return new Response(JSON.stringify({ ...data, ...newCase }), {
-        status: 201,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return res.status(201).json({ ...data, ...newCase });
     }
 
     // PUT: Update case (status or assignment)
     if (req.method === 'PUT') {
-      const data = await req.json();
+      const data = req.body;
       
       if (data.status) {
         await sql`
@@ -77,17 +66,13 @@ export default async function handler(req) {
         `;
       }
 
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return res.status(200).json({ success: true });
     }
+
+    return res.status(405).json({ error: 'Method not allowed' });
 
   } catch (error) {
     console.error(error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(500).json({ error: error.message });
   }
 }

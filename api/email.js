@@ -1,20 +1,15 @@
 import { Resend } from 'resend';
 
-export const config = {
-  runtime: 'edge',
-};
-
 // Inicializar Resend con la clave de entorno
-// NOTA: Si no hay clave, fallará, lo cual es correcto para alertar al desarrollador.
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { type, to, data } = await req.json();
+    const { type, to, data } = req.body;
 
     // Validar configuración básica
     if (!process.env.RESEND_API_KEY) {
@@ -22,9 +17,6 @@ export default async function handler(req) {
     }
 
     // Configuración del remitente
-    // NOTA: Para pruebas sin dominio propio, usar 'onboarding@resend.dev'
-    // y solo se puede enviar al email con el que te registraste en Resend.
-    // Para producción, verifica tu dominio en Resend.
     const FROM_EMAIL = 'SinBullying <onboarding@resend.dev>'; 
 
     let subject = '';
@@ -67,13 +59,10 @@ export default async function handler(req) {
       throw error;
     }
 
-    return new Response(JSON.stringify(emailData), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(200).json(emailData);
 
   } catch (error) {
     console.error("Email Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return res.status(500).json({ error: error.message });
   }
 }

@@ -1,11 +1,6 @@
-
 import { sql } from '@vercel/postgres';
 
-export const config = {
-  runtime: 'edge',
-};
-
-export default async function handler(req) {
+export default async function handler(req, res) {
   try {
     // 1. Crear Tabla de Usuarios (Técnicos)
     await sql`
@@ -41,14 +36,8 @@ export default async function handler(req) {
       );
     `;
 
-    return new Response(JSON.stringify({ message: 'Tablas creadas correctamente' }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(200).json({ message: 'Tablas creadas correctamente' });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(500).json({ error: error.message });
   }
 }

@@ -6,10 +6,9 @@ Una plataforma de código abierto para que centros educativos gestionen reportes
 ![Coste](https://img.shields.io/badge/Coste-100%25_Gratis-blue)
 
 ## 💰 ¿Cuánto cuesta?
-Este proyecto está diseñado para funcionar **gratis** con el plan Hobby de Vercel:
-- **Alojamiento y Base de Datos:** Vercel Postgres.
-- **Almacenamiento de archivos:** Vercel Blob (250MB gratis).
-- **Correos Electrónicos:** Resend (3000 emails/mes gratis).
+Este proyecto está diseñado para funcionar **gratis** con las capas gratuitas de los proveedores:
+- **Vercel Plan Hobby:** Alojamiento, Base de Datos y Almacenamiento (Gratis para siempre para uso personal/no comercial).
+- **Resend:** Envío de correos (3000/mes gratis).
 
 ---
 
@@ -21,53 +20,72 @@ Este proyecto está diseñado para funcionar **gratis** con el plan Hobby de Ver
 
 ---
 
-## 🚀 Guía de Despliegue (¡Muy Fácil!)
+## 📝 Paso 1: Crear Cuentas (Prerrequisitos)
 
-### 1. Preparar Email (Resend)
-Para que lleguen los códigos de verificación, necesitas una API Key.
-1. Crea una cuenta gratis en [Resend.com](https://resend.com).
-2. Ve a **API Keys** y crea una nueva (copia la clave `re_123...`).
-3. (Opcional) Si tienes un dominio propio, verifícalo en Resend. Si no, solo podrás enviar correos de prueba a tu propio email de registro.
+Antes de instalar nada, necesitas tener acceso a estas dos herramientas gratuitas.
 
-### 2. Desplegar en Vercel
+### 1. Crear cuenta en Vercel (El alojamiento)
+Vercel es donde "vive" tu página web.
+1. Ve a [vercel.com/signup](https://vercel.com/signup).
+2. Selecciona **"Hobby"** (es la opción gratuita).
+3. Escribe tu nombre y elige **"Continue with GitHub"**.
+   - *Si no tienes GitHub, créate uno en [github.com](https://github.com) primero. Es necesario para guardar tu código.*
+4. Sigue los pasos de verificación telefónica si te lo piden.
 
-Tienes dos opciones. La más segura para que coja tu código actual es la **Opción A**.
+### 2. Obtener la API Key de Resend (Para los emails)
+Resend es el servicio que envía los códigos de seguridad a los alumnos.
+1. Ve a [resend.com](https://resend.com) y regístrate (puedes usar tu GitHub o Google).
+2. Una vez dentro, en el menú lateral izquierdo, haz clic en **API Keys**.
+3. Haz clic en el botón negro **"Create API Key"**.
+4. En "Name", pon el nombre de tu escuela o proyecto (ej. `SinBullying`).
+5. Deja "Permission" en "Full Access" y dale a **Add**.
+6. **¡IMPORTANTE!** Copia la clave que aparece (empieza por `re_...`).
+   - *Guárdala en un bloc de notas ahora mismo. Solo se muestra una vez.*
 
-**Opción A: Importar desde Vercel (Recomendado)**
-1. Sube este código a tu repositorio de GitHub.
-2. Entra en [Vercel.com](https://vercel.com), dale a **"Add New Project"** e importa tu repositorio.
-3. Añade la variable de entorno:
-   - `RESEND_API_KEY`: Pega la clave que obtuviste en el paso 1.
-4. Una vez creado el proyecto:
-   - Ve a la pestaña **Storage**.
-   - Conecta una base de datos **Postgres** (Dale a "Create").
-   - Conecta un almacenamiento **Blob** (Dale a "Create").
+---
 
-**Opción B: Usar el Botón de Despliegue**
-Si prefieres usar el botón, **primero debes editar este README** y cambiar `TU_USUARIO/TU_REPOSITORIO` en el enlace de abajo por la URL real de tu repositorio en GitHub.
+## 🚀 Paso 2: Despliegue (Instalación)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FTU_USUARIO%2FTU_REPOSITORIO&project-name=sinbullying-app&repository-name=sinbullying-app&env=RESEND_API_KEY&envDescription=API%20Key%20de%20Resend%20para%20emails&stores=[{"type":"postgres"},{"type":"blob"}])
+Elige **una** de las dos opciones siguientes.
 
-### 3. Configuración Final
+### Opción A: Importar desde Vercel (Recomendada)
+Esta opción es la que menos fallos da.
+
+1. Sube los archivos de este proyecto a tu propia cuenta de GitHub (crea un repositorio nuevo y sube los archivos).
+2. Ve a tu panel de Vercel ([vercel.com/dashboard](https://vercel.com/dashboard)).
+3. Haz clic en el botón negro **"Add New..."** -> **"Project"**.
+4. Verás tu repositorio de GitHub en la lista. Dale a **"Import"**.
+5. En la sección **Environment Variables**, añade una nueva:
+   - **Key:** `RESEND_API_KEY`
+   - **Value:** (Pega la clave `re_...` que guardaste en el paso anterior).
+6. Dale a **Deploy**.
+7. Una vez termine, ve a la pestaña **Storage** de tu proyecto en Vercel:
+   - Dale a "Connect Store" -> "Postgres" -> "Create New".
+   - Dale a "Connect Store" -> "Blob" -> "Create New".
+
+### Opción B: Usar el Botón de Despliegue Rápido
+**Nota:** Para que este botón funcione, debes estar viendo este archivo **desde tu propio repositorio** en GitHub, o editar el enlace manualmente.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FTU_USUARIO%2FTU_REPOSITORIO&project-name=sinbullying-app&repository-name=sinbullying-app&env=RESEND_API_KEY&envDescription=La%20clave%20que%20copiaste%20de%20Resend%20(empieza%20por%20re_)&stores=[{"type":"postgres"},{"type":"blob"}])
+
+*Si usas el botón, recuerda cambiar `TU_USUARIO/TU_REPOSITORIO` en la URL del navegador si falla.*
+
+---
+
+## ⚙️ Paso 3: Configuración Final
 Una vez que la web esté online (tendrás una URL tipo `sinbullying-app.vercel.app`):
 
-1. Abre en tu navegador: `https://TU-WEB.vercel.app/api/setup`
-   - Esto creará las tablas en la base de datos. Deberías ver: `{"message":"Tablas creadas correctamente"}`.
-   
-2. ¡Listo! Ya puedes entrar.
+1. **Crear las tablas:**
+   - Abre en tu navegador: `https://TU-WEB.vercel.app/api/setup`
+   - Debes ver el mensaje: `{"message":"Tablas creadas correctamente"}`.
+
+2. **Entrar como Admin:**
    - Ve a `https://TU-WEB.vercel.app/#/login`
    - Entra como Admin usando cualquier correo que contenga la palabra "admin" (ej. `director_admin@escuela.edu`).
 
----
-
-## 🛠 Desarrollo Local (Programadores)
-
-1. Clona el repo.
-2. `npm install`
-3. Instala Vercel CLI: `npm i -g vercel`
-4. Vincula el proyecto: `vercel link`
-5. Descarga las variables de entorno: `vercel env pull .env.local`
-6. `npm run dev`
+3. **Restricción de Resend (Modo Prueba):**
+   - Si no has verificado un dominio propio en Resend (cuesta dinero o requiere conocimientos técnicos), Resend solo enviará emails a la dirección de correo con la que te registraste.
+   - **Para probar la app:** Cuando hagas un reporte como alumno, usa **tu propio email** (el de la cuenta de Resend) en el campo "Contacto". Así recibirás el código OTP.
 
 ---
-Hecho con ❤️ usando React, Tailwind, Vercel Postgres, Vercel Blob & Resend.
+Hecho con ❤️ para ayudar a crear espacios seguros.
