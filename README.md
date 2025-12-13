@@ -9,6 +9,7 @@ Una plataforma de código abierto para que centros educativos gestionen reportes
 Este proyecto está diseñado para funcionar **gratis** con el plan Hobby de Vercel:
 - **Alojamiento y Base de Datos:** Vercel Postgres.
 - **Almacenamiento de archivos:** Vercel Blob (250MB gratis).
+- **Correos Electrónicos:** Resend (3000 emails/mes gratis).
 
 ---
 
@@ -16,31 +17,38 @@ Este proyecto está diseñado para funcionar **gratis** con el plan Hobby de Ver
 
 - **Panel de Estudiante:** Reporte anónimo/identificado, subida de pruebas y chat WhatsApp.
 - **Panel de Administración:** Gestión de casos, asignación de técnicos y estadísticas.
-- **Seguridad:** Verificación por código (OTP) y roles de usuario.
+- **Seguridad:** Verificación por código (OTP) enviado al email real.
 
 ---
 
 ## 🚀 Guía de Despliegue (¡Muy Fácil!)
 
-### 1. Desplegar en Vercel
+### 1. Preparar Email (Resend)
+Para que lleguen los códigos de verificación, necesitas una API Key.
+1. Crea una cuenta gratis en [Resend.com](https://resend.com).
+2. Ve a **API Keys** y crea una nueva (copia la clave `re_123...`).
+3. (Opcional) Si tienes un dominio propio, verifícalo en Resend. Si no, solo podrás enviar correos de prueba a tu propio email de registro.
+
+### 2. Desplegar en Vercel
 
 Tienes dos opciones. La más segura para que coja tu código actual es la **Opción A**.
 
 **Opción A: Importar desde Vercel (Recomendado)**
 1. Sube este código a tu repositorio de GitHub.
 2. Entra en [Vercel.com](https://vercel.com), dale a **"Add New Project"** e importa tu repositorio.
-3. Una vez creado el proyecto:
+3. Añade la variable de entorno:
+   - `RESEND_API_KEY`: Pega la clave que obtuviste en el paso 1.
+4. Una vez creado el proyecto:
    - Ve a la pestaña **Storage**.
    - Conecta una base de datos **Postgres** (Dale a "Create").
    - Conecta un almacenamiento **Blob** (Dale a "Create").
-4. Vercel añadirá automáticamente las variables de entorno necesarias. ¡Listo!
 
 **Opción B: Usar el Botón de Despliegue**
 Si prefieres usar el botón, **primero debes editar este README** y cambiar `TU_USUARIO/TU_REPOSITORIO` en el enlace de abajo por la URL real de tu repositorio en GitHub.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FTU_USUARIO%2FTU_REPOSITORIO&project-name=sinbullying-app&repository-name=sinbullying-app&stores=[{"type":"postgres"},{"type":"blob"}])
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FTU_USUARIO%2FTU_REPOSITORIO&project-name=sinbullying-app&repository-name=sinbullying-app&env=RESEND_API_KEY&envDescription=API%20Key%20de%20Resend%20para%20emails&stores=[{"type":"postgres"},{"type":"blob"}])
 
-### 2. Configuración Final
+### 3. Configuración Final
 Una vez que la web esté online (tendrás una URL tipo `sinbullying-app.vercel.app`):
 
 1. Abre en tu navegador: `https://TU-WEB.vercel.app/api/setup`
@@ -62,4 +70,4 @@ Una vez que la web esté online (tendrás una URL tipo `sinbullying-app.vercel.a
 6. `npm run dev`
 
 ---
-Hecho con ❤️ usando React, Tailwind, Vercel Postgres & Vercel Blob.
+Hecho con ❤️ usando React, Tailwind, Vercel Postgres, Vercel Blob & Resend.

@@ -1,7 +1,7 @@
 import { BullyingCase, User, Role, CaseStatus, Evidence } from '../types';
 
 const CURRENT_USER_KEY = 'sinbullying_current_user';
-const OTPS_KEY = 'sinbullying_otps';
+const OTPS_KEY = 'sinbullying_otps'; // Aún usamos localStorage para validar el código, pero el envío es real.
 
 // Helpers para llamadas API
 const api = async (endpoint: string, method: string = 'GET', body?: any) => {
@@ -101,7 +101,26 @@ export const uploadFile = async (file: File): Promise<Evidence> => {
 };
 
 export const createCase = async (data: Omit<BullyingCase, 'id' | 'status' | 'createdAt' | 'updatedAt'>): Promise<BullyingCase> => {
-    return api('cases', 'POST', data);
+    const newCase = await api('cases', 'POST', data);
+    
+    // Notificar al Admin (Opcional: En una app real, esto se haría en el backend para no bloquear)
+    // Usamos un email genérico de admin o obtenemos el del primer admin
+    try {
+        await api('email', 'POST', {
+            type: 'new_case',
+            to: 'admin_email_demo@example.com', // Reemplazar con variable de entorno en backend idealmente
+            data: {
+                location: data.location,
+                description: data.description,
+                date: data.dateOfIncident,
+                url: window.location.origin // URL base de la app
+            }
+        });
+    } catch (e) {
+        console.warn("No se pudo enviar notificación al admin:", e);
+    }
+
+    return newCase;
 };
 
 export const getCases = async (): Promise<BullyingCase[]> => {
@@ -128,17 +147,32 @@ export const assignCaseToTechnician = async (caseId: string, technicianId: strin
 };
 
 // ==========================================
-// MOCKED 2FA (Client Side for Demo)
+// REAL 2FA VIA EMAIL
 // ==========================================
 
 export const sendVerificationCode = async (email: string): Promise<boolean> => {
-  await new Promise(resolve => setTimeout(resolve, 800));
   const code = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  // 1. Guardar código localmente (temporal para validación)
   const otps = JSON.parse(localStorage.getItem(OTPS_KEY) || '{}');
   otps[email] = code;
   localStorage.setItem(OTPS_KEY, JSON.stringify(otps));
-  console.log(`[SYSTEM] OTP para ${email}: ${code}`);
-  return true;
+
+  // 2. Enviar email real
+  try {
+      await api('email', 'POST', {
+          type: 'otp',
+          to: email,
+          data: { code }
+      });
+      return true;
+  } catch (e) {
+      console.error(e);
+      // Fallback para desarrollo si no hay API Key configurada
+      alert("Error enviando email (¿Falta API Key?). Revisa la consola para ver el código en modo dev.");
+      console.log(`[DEV MODE] OTP para ${email}: ${code}`);
+      return false;
+  }
 };
 
 export const verifyOTP = async (email: string, code: string): Promise<boolean> => {
