@@ -39,17 +39,25 @@ Necesitas esto para guardar las evidencias que suban los alumnos.
    - Entra en la cuenta creada, pestaña **Claves**, crea una **Clave JSON** y descárgala.
 
 ### 2. Desplegar en Vercel
-Haz clic en el botón. Te pedirá que inicies sesión con GitHub.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbknd-io%2Fsinbullying-template&env=GOOGLE_PROJECT_ID,GOOGLE_CLIENT_EMAIL,GOOGLE_PRIVATE_KEY,GOOGLE_BUCKET_NAME&envDescription=Credenciales+Google+Cloud&project-name=sinbullying-app&repository-name=sinbullying-app&stores=[{"type":"postgres"}])
+Tienes dos opciones. La más segura para que coja tu código actual es la **Opción A**.
 
-Durante el proceso:
-1.  Rellena las variables con los datos de tu JSON de Google Cloud:
-    - `GOOGLE_PRIVATE_KEY`: Copia todo el contenido del archivo JSON.
-    - `GOOGLE_CLIENT_EMAIL`: El email del service account.
-    - `GOOGLE_PROJECT_ID`: El ID de tu proyecto.
-    - `GOOGLE_BUCKET_NAME`: El nombre de tu bucket.
-2.  Cuando te pida añadir base de datos, selecciona **Neon Serverless Postgres** y dale a **Add**.
+**Opción A: Importar desde Vercel (Recomendado)**
+1. Sube este código a tu repositorio de GitHub.
+2. Entra en [Vercel.com](https://vercel.com), dale a **"Add New Project"** e importa tu repositorio.
+3. Añade las variables de entorno de Google Cloud (`GOOGLE_PRIVATE_KEY`, etc) cuando te lo pida.
+4. Una vez creado el proyecto, ve a la pestaña **Storage**, selecciona **Postgres** y dale a **Create** para conectar la base de datos.
+
+**Opción B: Usar el Botón de Despliegue**
+Si prefieres usar el botón, **primero debes editar este README** y cambiar `TU_USUARIO/TU_REPOSITORIO` en el enlace de abajo por la URL real de tu repositorio en GitHub.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FTU_USUARIO%2FTU_REPOSITORIO&env=GOOGLE_PROJECT_ID,GOOGLE_CLIENT_EMAIL,GOOGLE_PRIVATE_KEY,GOOGLE_BUCKET_NAME&envDescription=Credenciales+Google+Cloud&project-name=sinbullying-app&repository-name=sinbullying-app&stores=[{"type":"postgres"}])
+
+Durante el proceso rellenarás:
+- `GOOGLE_PRIVATE_KEY`: Copia todo el contenido del archivo JSON.
+- `GOOGLE_CLIENT_EMAIL`: El email del service account.
+- `GOOGLE_PROJECT_ID`: El ID de tu proyecto.
+- `GOOGLE_BUCKET_NAME`: El nombre de tu bucket.
 
 ### 3. Configuración Final
 Una vez que la web esté online (tendrás una URL tipo `sinbullying-app.vercel.app`):
