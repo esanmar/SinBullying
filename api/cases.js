@@ -1,25 +1,8 @@
 
 import { sql } from '@vercel/postgres';
-import nodemailer from 'nodemailer';
-
-// Configurar transporter de nodemailer
-let transporter = null;
-
-// Inicializar transporter solo si están configuradas las variables SMTP
-if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true', // true para puerto 465, false para otros
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-}
 
 export const config = {
-  runtime: 'nodejs',
+  runtime: 'edge',
 };
 
 export default async function handler(req) {
@@ -66,38 +49,6 @@ export default async function handler(req) {
       `;
 
       const newCase = rows[0];
-
-      // --- EMAIL NOTIFICATION LOGIC ---
-      if (transporter && process.env.ADMIN_EMAIL) {
-          try {
-            await transporter.sendMail({
-              from: process.env.SMTP_FROM || `"SinBullying Alertas" <${process.env.SMTP_USER}>`,
-              to: process.env.ADMIN_EMAIL,
-              subject: `🚨 Nuevo Reporte de Bullying #${newCase.id.slice(0, 8)}`,
-              html: `
-                <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
-                  <h2 style="color: #d32f2f;">Nuevo Caso Reportado</h2>
-                  <p>Se ha registrado un nuevo incidente en la plataforma.</p>
-                  
-                  <ul style="background: #f9f9f9; padding: 15px; list-style: none;">
-                    <li><strong>ID:</strong> ${newCase.id}</li>
-                    <li><strong>Fecha Incidente:</strong> ${data.dateOfIncident}</li>
-                    <li><strong>Ubicación:</strong> ${data.location}</li>
-                    <li><strong>Descripción:</strong> ${data.description.substring(0, 100)}...</li>
-                  </ul>
-
-                  <a href="https://${req.headers.get('host')}/#/login" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">
-                    Ver en Panel de Admin
-                  </a>
-                </div>
-              `
-            });
-            console.log("Email de alerta enviado a admin");
-          } catch (emailError) {
-            console.error("Error enviando email:", emailError);
-            // No fallamos el request si falla el email, solo lo logueamos
-          }
-      }
 
       return new Response(JSON.stringify({ ...data, ...newCase }), {
         status: 201,
