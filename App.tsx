@@ -7,7 +7,7 @@ import AdminDashboard from './components/AdminDashboard';
 import TechnicianDashboard from './components/TechnicianDashboard';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import CookieBanner from './components/CookieBanner';
-import { Shield, LogOut } from './components/Icons';
+import { Shield, LogOut, Users, FileText, CheckCircle, AlertTriangle, Briefcase, UserIcon } from './components/Icons';
 
 // --- PASSWORD RESET COMPONENT ---
 const ResetPasswordScreen = () => {
@@ -80,7 +80,27 @@ const ResetPasswordScreen = () => {
     );
 };
 
-// --- LOGIN & REGISTER COMPONENT ---
+// --- FEATURE CARD COMPONENT ---
+const FeatureSection = ({ title, icon, items }: { title: string, icon: React.ReactNode, items: string[] }) => (
+    <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/10">
+        <div className="flex items-center mb-4">
+            <div className="bg-white/20 p-2 rounded-lg mr-3 text-white">
+                {icon}
+            </div>
+            <h3 className="text-lg font-bold text-white">{title}</h3>
+        </div>
+        <ul className="space-y-2">
+            {items.map((item, idx) => (
+                <li key={idx} className="text-brand-100 text-sm flex items-start">
+                    <span className="mr-2 mt-1">•</span>
+                    <span>{item}</span>
+                </li>
+            ))}
+        </ul>
+    </div>
+);
+
+// --- LOGIN & LANDING COMPONENT ---
 const AuthScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -142,156 +162,250 @@ const AuthScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="bg-brand-600 p-8 text-center">
-          <div className="mx-auto bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm">
-            <Shield className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-white mb-2">SinBullying</h1>
-          <p className="text-brand-100">
-             {isForgotPassword ? 'Recuperar Contraseña' : isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
-          </p>
+    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
+      
+      {/* LEFT COLUMN: LANDING INFO */}
+      <div className="lg:w-7/12 bg-brand-600 p-8 lg:p-16 flex flex-col order-2 lg:order-1 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/>
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
         </div>
-        
-        <form onSubmit={handleSubmit} className="p-8 space-y-4">
-          
-          {/* Role Selector (Always visible unless forgot password) */}
-          {!isForgotPassword && (
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Soy...</label>
-                <div className="grid grid-cols-3 gap-2">
-                <button
-                    type="button"
-                    onClick={() => setRole('student')}
-                    className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
-                    role === 'student' 
-                    ? 'border-brand-500 bg-brand-50 text-brand-700' 
-                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                    }`}
-                >
-                    Estudiante
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setRole('technician')}
-                    className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
-                    role === 'technician' 
-                    ? 'border-brand-500 bg-brand-50 text-brand-700' 
-                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                    }`}
-                >
-                    Técnico
-                </button>
-                <button
-                    type="button"
-                    disabled={!isLogin} // Admin can't register here
-                    onClick={() => setRole('admin')}
-                    className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
-                    role === 'admin' 
-                    ? 'border-brand-500 bg-brand-50 text-brand-700' 
-                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                    } ${!isLogin ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                    Admin
-                </button>
+
+        <div className="relative z-10">
+            <div className="mb-10">
+                <div className="flex items-center space-x-3 mb-6">
+                    <div className="bg-white/20 p-3 rounded-full backdrop-blur-md">
+                        <Shield className="w-8 h-8 text-white" />
+                    </div>
+                    <h1 className="text-3xl lg:text-4xl font-bold text-white tracking-tight">SinBullying</h1>
+                </div>
+                <h2 className="text-xl text-brand-100 font-light leading-relaxed max-w-2xl">
+                    Plataforma integral para la gestión segura, privada y trazable de la convivencia escolar. 
+                    Conectamos estudiantes con orientadores para crear espacios seguros.
+                </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FeatureSection 
+                    title="Para Estudiantes" 
+                    icon={<UserIcon className="w-5 h-5"/>}
+                    items={[
+                        "Reporte de casos seguro y confidencial.",
+                        "Subida de evidencias (Fotos/PDF) comprimidas.",
+                        "Seguridad reforzada con verificación 2FA (Email).",
+                        "Gestión de perfil y seguimiento de estado.",
+                        "Notas privadas para ampliar información."
+                    ]} 
+                />
+                <FeatureSection 
+                    title="Para Técnicos" 
+                    icon={<Briefcase className="w-5 h-5"/>}
+                    items={[
+                        "Panel de gestión de casos centralizado.",
+                        "Bolsa de casos y auto-asignación.",
+                        "Integración directa con WhatsApp.",
+                        "Bitácora de acciones y notas de intervención.",
+                        "Edición de reportes y seguimiento."
+                    ]} 
+                />
+                <FeatureSection 
+                    title="Administración" 
+                    icon={<Users className="w-5 h-5"/>}
+                    items={[
+                        "Visión global y estadísticas en tiempo real.",
+                        "Gestión de usuarios y permisos.",
+                        "Trazabilidad total (Audit Logs) de cambios.",
+                        "Supervisión y reasignación de casos.",
+                        "Notificaciones automáticas por email."
+                    ]} 
+                />
+                <FeatureSection 
+                    title="Privacidad y Seguridad" 
+                    icon={<CheckCircle className="w-5 h-5"/>}
+                    items={[
+                        "Cumplimiento con RGPD y Protección de Datos.",
+                        "Encriptación de contraseñas.",
+                        "Verificación de identidad anti-spam.",
+                        "Historial inmutable de modificaciones.",
+                        "Entorno seguro HTTPS."
+                    ]} 
+                />
+            </div>
+
+            <div className="mt-12 pt-8 border-t border-white/20 flex flex-col sm:flex-row justify-between text-brand-200 text-sm">
+                <p>© {new Date().getFullYear()} SinBullying Platform. Open Source.</p>
+                <div className="flex space-x-4 mt-2 sm:mt-0">
+                    <Link to="/privacy" className="hover:text-white underline">Política de Privacidad</Link>
                 </div>
             </div>
-          )}
+        </div>
+      </div>
 
-          {!isLogin && !isForgotPassword && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
-                <input 
-                    type="text" required
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-brand-500"
-                    value={name} onChange={e => setName(e.target.value)}
-                />
-              </div>
-          )}
+      {/* RIGHT COLUMN: AUTH FORM */}
+      <div className="lg:w-5/12 bg-white flex flex-col items-center justify-center p-6 lg:p-12 order-1 lg:order-2 shadow-2xl z-20 overflow-y-auto">
+        <div className="w-full max-w-md space-y-8">
+            <div className="text-center lg:hidden mb-8">
+                 <div className="mx-auto bg-brand-600 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                    <Shield className="w-8 h-8 text-white" />
+                 </div>
+                 <h1 className="text-3xl font-bold text-gray-900">SinBullying</h1>
+                 <p className="text-gray-500 mt-2">Plataforma de Convivencia Escolar</p>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
-            <input 
-              type="email" 
-              required
-              placeholder="nombre@ejemplo.com"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-brand-500"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-            />
-          </div>
+            <div className="bg-white p-2">
+                <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">
+                    {isForgotPassword ? 'Recuperar Cuenta' : isLogin ? 'Bienvenido de nuevo' : 'Crear Cuenta'}
+                </h2>
+                <p className="text-center text-gray-500 text-sm mb-8">
+                    {isForgotPassword ? 'Ingresa tu email para recibir instrucciones' : isLogin ? 'Ingresa tus credenciales para acceder' : 'Completa el formulario para registrarte'}
+                </p>
 
-          {!isForgotPassword && (
-             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-                <input 
-                  type="password" 
-                  required
-                  placeholder="••••••••"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-brand-500"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                />
-             </div>
-          )}
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    
+                    {/* Role Selector */}
+                    {!isForgotPassword && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Soy...</label>
+                            <div className="grid grid-cols-3 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setRole('student')}
+                                className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
+                                role === 'student' 
+                                ? 'border-brand-500 bg-brand-50 text-brand-700' 
+                                : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                                }`}
+                            >
+                                Estudiante
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setRole('technician')}
+                                className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
+                                role === 'technician' 
+                                ? 'border-brand-500 bg-brand-50 text-brand-700' 
+                                : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                                }`}
+                            >
+                                Técnico
+                            </button>
+                            <button
+                                type="button"
+                                disabled={!isLogin} 
+                                onClick={() => setRole('admin')}
+                                className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
+                                role === 'admin' 
+                                ? 'border-brand-500 bg-brand-50 text-brand-700' 
+                                : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                                } ${!isLogin ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                Admin
+                            </button>
+                            </div>
+                        </div>
+                    )}
 
-          {/* Privacy Checkbox for Registration */}
-          {!isLogin && !isForgotPassword && (
-              <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="privacy"
-                      type="checkbox"
-                      required
-                      className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-brand-300"
-                      checked={acceptedTerms}
-                      onChange={e => setAcceptedTerms(e.target.checked)}
-                    />
-                  </div>
-                  <label htmlFor="privacy" className="ml-2 text-xs text-gray-600">
-                      Acepto la <Link to="/privacy" target="_blank" className="text-brand-600 hover:underline">Política de Privacidad</Link> y el tratamiento de mis datos para la gestión del reporte.
-                  </label>
-              </div>
-          )}
-            
-          {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">{error}</div>}
-          {successMsg && <div className="p-3 bg-green-50 text-green-600 text-sm rounded-lg border border-green-100">{successMsg}</div>}
+                    {!isLogin && !isForgotPassword && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                            <input 
+                                type="text" required
+                                className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition"
+                                value={name} onChange={e => setName(e.target.value)}
+                            />
+                        </div>
+                    )}
 
-          <button 
-            type="submit" 
-            disabled={isLoading}
-            className="w-full bg-brand-600 text-white font-bold py-3 rounded-lg hover:bg-brand-700 transition shadow-lg disabled:opacity-70"
-          >
-            {isLoading ? 'Procesando...' : isForgotPassword ? 'Enviar enlace' : isLogin ? 'Entrar' : 'Registrarse'}
-          </button>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+                        <input 
+                        type="email" 
+                        required
+                        placeholder="nombre@ejemplo.com"
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        />
+                    </div>
 
-          {/* Footer Links */}
-          <div className="flex flex-col items-center space-y-2 mt-4 text-sm">
-              {!isForgotPassword && (
-                  <button type="button" onClick={() => { setIsForgotPassword(true); resetForm(); }} className="text-brand-600 hover:underline">
-                      ¿Olvidaste tu contraseña?
-                  </button>
-              )}
-              
-              {isForgotPassword ? (
-                  <button type="button" onClick={() => { setIsForgotPassword(false); resetForm(); }} className="text-gray-500 hover:text-gray-700">
-                      Volver al inicio
-                  </button>
-              ) : (
-                role !== 'admin' && (
-                    <button type="button" onClick={() => { setIsLogin(!isLogin); resetForm(); }} className="text-gray-500 hover:text-gray-700">
-                        {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia Sesión'}
+                    {!isForgotPassword && (
+                        <div>
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="block text-sm font-medium text-gray-700">Contraseña</label>
+                                {isLogin && (
+                                    <button type="button" onClick={() => { setIsForgotPassword(true); resetForm(); }} className="text-xs text-brand-600 hover:underline">
+                                        ¿Olvidaste tu contraseña?
+                                    </button>
+                                )}
+                            </div>
+                            <input 
+                            type="password" 
+                            required
+                            placeholder="••••••••"
+                            className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            />
+                        </div>
+                    )}
+
+                    {/* Privacy Checkbox */}
+                    {!isLogin && !isForgotPassword && (
+                        <div className="flex items-start bg-gray-50 p-3 rounded-lg">
+                            <div className="flex items-center h-5">
+                                <input
+                                id="privacy"
+                                type="checkbox"
+                                required
+                                className="w-4 h-4 border border-gray-300 rounded bg-white focus:ring-3 focus:ring-brand-300"
+                                checked={acceptedTerms}
+                                onChange={e => setAcceptedTerms(e.target.checked)}
+                                />
+                            </div>
+                            <label htmlFor="privacy" className="ml-2 text-xs text-gray-600">
+                                He leído y acepto la <Link to="/privacy" target="_blank" className="text-brand-600 font-bold hover:underline">Política de Privacidad</Link>. Entiendo que mis datos se usarán para gestionar el reporte.
+                            </label>
+                        </div>
+                    )}
+                        
+                    {error && <div className="p-4 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100 flex items-start"><AlertTriangle className="w-5 h-5 mr-2 shrink-0"/>{error}</div>}
+                    {successMsg && <div className="p-4 bg-green-50 text-green-700 text-sm rounded-lg border border-green-100 flex items-start"><CheckCircle className="w-5 h-5 mr-2 shrink-0"/>{successMsg}</div>}
+
+                    <button 
+                        type="submit" 
+                        disabled={isLoading}
+                        className="w-full bg-brand-600 text-white font-bold py-3 rounded-lg hover:bg-brand-700 transition shadow-lg hover:shadow-xl disabled:opacity-70 transform active:scale-95"
+                    >
+                        {isLoading ? 'Procesando...' : isForgotPassword ? 'Enviar Enlace de Recuperación' : isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
                     </button>
-                )
-              )}
-          </div>
-          
-          <div className="pt-4 mt-4 border-t border-gray-100 text-center">
-             <Link to="/privacy" className="text-xs text-gray-400 hover:text-gray-600">Política de Privacidad</Link>
-          </div>
 
-        </form>
+                    <div className="pt-4 text-center">
+                        {isForgotPassword ? (
+                            <button type="button" onClick={() => { setIsForgotPassword(false); resetForm(); }} className="text-sm text-gray-500 hover:text-gray-800 font-medium">
+                                ← Volver al inicio de sesión
+                            </button>
+                        ) : (
+                            role !== 'admin' && (
+                                <button type="button" onClick={() => { setIsLogin(!isLogin); resetForm(); }} className="text-sm text-gray-600 hover:text-brand-600">
+                                    {isLogin ? (
+                                        <span>¿No tienes cuenta? <span className="font-bold text-brand-600">Regístrate gratis</span></span>
+                                    ) : (
+                                        <span>¿Ya tienes cuenta? <span className="font-bold text-brand-600">Inicia Sesión</span></span>
+                                    )}
+                                </button>
+                            )
+                        )}
+                    </div>
+                </form>
+            </div>
+        </div>
       </div>
     </div>
   );
