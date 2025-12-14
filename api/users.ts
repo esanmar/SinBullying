@@ -27,7 +27,7 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json(users);
     }
 
-    // POST: Register User (Technician or Student)
+    // POST: Register User
     if (req.method === 'POST') {
       const data = req.body;
       
@@ -66,6 +66,53 @@ export default async function handler(req: any, res: any) {
       };
 
       return res.status(201).json(newUser);
+    }
+
+    // PUT: Update User (Admin editing technician)
+    if (req.method === 'PUT') {
+        const data = req.body;
+        
+        if (!data.id) {
+            return res.status(400).json({ error: "Falta ID de usuario" });
+        }
+
+        // Si se envía contraseña, la encriptamos, sino mantenemos la vieja (update dinámico)
+        if (data.password && data.password.length > 0) {
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(data.password, salt);
+            
+            await sql`
+                UPDATE users 
+                SET name=${data.name}, last_name=${data.lastName}, email=${data.email}, phone=${data.phone}, center=${data.center}, password=${hashedPassword}
+                WHERE id=${data.id}
+            `;
+        } else {
+            await sql`
+                UPDATE users 
+                SET name=${data.name}, last_name=${data.lastName}, email=${data.email}, phone=${data.phone}, center=${data.center}
+                WHERE id=${data.id}
+            `;
+        }
+
+        return res.status(200).json({ success: true });
+    }
+
+    // DELETE: Remove User
+    if (req.method === 'DELETE') {
+        const { id } = req.query;
+
+        if (!id) {
+            return res.status(400).json({ error: "Falta ID de usuario" });
+        }
+
+        // 1. Desasignar casos asignados a este técnico para evitar errores de Foreign Key
+        // Nota: En un sistema real podrías querer borrar los casos o reasignarlos, aquí los dejamos "Sin Asignar"
+        await sql`UPDATE cases SET assigned_technician_id = NULL, status = 'pendiente' WHERE assigned_technician_id = ${id}`;
+
+        // 2. Borrar usuario
+        await sql`DELETE FROM users WHERE id = ${id}`;
+
+        return res.status(200).json({ success: true });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });

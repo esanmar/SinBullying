@@ -64,6 +64,15 @@ export const createTechnician = async (data: Omit<User, 'id' | 'role'> & { passw
     return api('users', 'POST', { ...data, role: 'technician' });
 };
 
+export const updateTechnician = async (id: string, data: Partial<User>): Promise<void> => {
+    return api('users', 'PUT', { id, ...data });
+};
+
+export const deleteTechnician = async (id: string): Promise<void> => {
+    // Usamos query param para el DELETE
+    return api(`users?id=${id}`, 'DELETE');
+};
+
 export const getTechnicians = async (): Promise<User[]> => {
     return api('users?role=technician');
 };

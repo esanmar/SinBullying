@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { getCases, updateCaseStatus, getTechnicians, createTechnician, assignCaseToTechnician } from '../services/bkndService';
+import { getCases, updateCaseStatus, getTechnicians, createTechnician, assignCaseToTechnician, updateTechnician, deleteTechnician } from '../services/bkndService';
 import { BullyingCase, CaseStatus, User } from '../types';
-import { FileText, CheckCircle, AlertTriangle, Calendar, Filter, UserIcon, Users, UserPlus, Briefcase } from './Icons';
+import { FileText, CheckCircle, AlertTriangle, Calendar, Filter, UserIcon, Users, UserPlus, Briefcase, Edit, Trash } from './Icons';
 
 type Tab = 'cases' | 'technicians';
 
@@ -15,9 +15,10 @@ const AdminDashboard: React.FC = () => {
   const [selectedCase, setSelectedCase] = useState<BullyingCase | null>(null);
   const [filter, setFilter] = useState<CaseStatus | 'all'>('all');
 
-  // New Tech State
-  const [showNewTechForm, setShowNewTechForm] = useState(false);
-  const [newTechData, setNewTechData] = useState({ name: '', lastName: '', email: '', phone: '', center: '' });
+  // Technician Form State
+  const [showTechForm, setShowTechForm] = useState(false);
+  const [editingTechId, setEditingTechId] = useState<string | null>(null);
+  const [techData, setTechData] = useState({ name: '', lastName: '', email: '', phone: '', center: '', password: '' });
 
   const fetchData = async () => {
     setLoading(true);
@@ -62,16 +63,66 @@ const AdminDashboard: React.FC = () => {
       }
   };
 
-  const handleCreateTechnician = async (e: React.FormEvent) => {
+  // --- TECHNICIAN MANAGEMENT ---
+
+  const openNewTechForm = () => {
+      setTechData({ name: '', lastName: '', email: '', phone: '', center: '', password: '' });
+      setEditingTechId(null);
+      setShowTechForm(true);
+  };
+
+  const openEditTechForm = (tech: User) => {
+      setTechData({
+          name: tech.name,
+          lastName: tech.lastName || '',
+          email: tech.email,
+          phone: tech.phone || '',
+          center: tech.center || '',
+          password: '' // Don't fill password on edit for security
+      });
+      setEditingTechId(tech.id);
+      setShowTechForm(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleTechSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-          const created = await createTechnician(newTechData);
-          setTechnicians([...technicians, created]);
-          setShowNewTechForm(false);
-          setNewTechData({ name: '', lastName: '', email: '', phone: '', center: '' });
-          alert("Técnico creado correctamente");
+          if (editingTechId) {
+              // Update
+              await updateTechnician(editingTechId, techData);
+              alert("Técnico actualizado correctamente");
+          } else {
+              // Create
+              if (!techData.password) {
+                  alert("La contraseña es obligatoria para nuevos usuarios");
+                  return;
+              }
+              await createTechnician(techData);
+              alert("Técnico creado correctamente");
+          }
+          
+          // Refresh list and close form
+          const updatedTechs = await getTechnicians();
+          setTechnicians(updatedTechs);
+          setShowTechForm(false);
+          setTechData({ name: '', lastName: '', email: '', phone: '', center: '', password: '' });
       } catch (error: any) {
-          alert(error.message || "Error creando técnico");
+          alert(error.message || "Error guardando técnico");
+      }
+  };
+
+  const handleDeleteTechnician = async (id: string) => {
+      if (!window.confirm("¿Estás seguro de que quieres eliminar este técnico? Los casos asignados volverán a estar pendientes.")) {
+          return;
+      }
+      try {
+          await deleteTechnician(id);
+          setTechnicians(prev => prev.filter(t => t.id !== id));
+          // Refresh cases to show unassigned status immediately if needed, or update locally
+          setCases(prev => prev.map(c => c.assignedTechnicianId === id ? {...c, assignedTechnicianId: null, status: 'pendiente'} : c));
+      } catch (e) {
+          alert("Error eliminando técnico");
       }
   };
 
@@ -308,53 +359,72 @@ const AdminDashboard: React.FC = () => {
               <div className="p-6 border-b flex justify-between items-center">
                   <h3 className="text-lg font-bold text-gray-800">Listado de Técnicos</h3>
                   <button 
-                    onClick={() => setShowNewTechForm(!showNewTechForm)}
+                    onClick={openNewTechForm}
                     className="flex items-center space-x-2 bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition"
                   >
                       <UserPlus className="w-5 h-5" /> <span>Alta Técnico</span>
                   </button>
               </div>
 
-              {showNewTechForm && (
+              {showTechForm && (
                   <div className="p-6 bg-gray-50 border-b animate-fade-in">
-                      <form onSubmit={handleCreateTechnician} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
-                          <h4 className="md:col-span-2 font-semibold text-gray-700 mb-2">Nuevo Técnico</h4>
+                      <form onSubmit={handleTechSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+                          <h4 className="md:col-span-2 font-semibold text-gray-700 mb-2">
+                              {editingTechId ? 'Editar Técnico' : 'Nuevo Técnico'}
+                          </h4>
+                          
                           <input 
                             required
                             placeholder="Nombre"
                             className="p-2 border rounded"
-                            value={newTechData.name}
-                            onChange={e => setNewTechData({...newTechData, name: e.target.value})}
+                            value={techData.name}
+                            onChange={e => setTechData({...techData, name: e.target.value})}
                           />
                           <input 
                             placeholder="Apellidos"
                             className="p-2 border rounded"
-                            value={newTechData.lastName}
-                            onChange={e => setNewTechData({...newTechData, lastName: e.target.value})}
+                            value={techData.lastName}
+                            onChange={e => setTechData({...techData, lastName: e.target.value})}
                           />
                           <input 
                             required
                             type="email"
                             placeholder="Email (Obligatorio)"
                             className="p-2 border rounded"
-                            value={newTechData.email}
-                            onChange={e => setNewTechData({...newTechData, email: e.target.value})}
+                            value={techData.email}
+                            onChange={e => setTechData({...techData, email: e.target.value})}
                           />
                           <input 
                             placeholder="Teléfono"
                             className="p-2 border rounded"
-                            value={newTechData.phone}
-                            onChange={e => setNewTechData({...newTechData, phone: e.target.value})}
+                            value={techData.phone}
+                            onChange={e => setTechData({...techData, phone: e.target.value})}
                           />
                           <input 
                             placeholder="Centro"
-                            className="p-2 border rounded md:col-span-2"
-                            value={newTechData.center}
-                            onChange={e => setNewTechData({...newTechData, center: e.target.value})}
+                            className="p-2 border rounded"
+                            value={techData.center}
+                            onChange={e => setTechData({...techData, center: e.target.value})}
                           />
-                          <div className="md:col-span-2 flex justify-end space-x-2">
-                              <button type="button" onClick={() => setShowNewTechForm(false)} className="px-4 py-2 text-gray-500 hover:bg-gray-200 rounded">Cancelar</button>
-                              <button type="submit" className="px-4 py-2 bg-brand-600 text-white rounded hover:bg-brand-700">Guardar Técnico</button>
+                           <div className="md:col-span-2">
+                                <label className="text-xs text-gray-500 mb-1 block">
+                                    {editingTechId ? 'Contraseña (Dejar en blanco para no cambiar)' : 'Contraseña *'}
+                                </label>
+                                <input 
+                                    type="password"
+                                    required={!editingTechId}
+                                    placeholder={editingTechId ? "••••••••" : "Contraseña segura"}
+                                    className="p-2 border rounded w-full"
+                                    value={techData.password}
+                                    onChange={e => setTechData({...techData, password: e.target.value})}
+                                />
+                          </div>
+
+                          <div className="md:col-span-2 flex justify-end space-x-2 mt-2">
+                              <button type="button" onClick={() => setShowTechForm(false)} className="px-4 py-2 text-gray-500 hover:bg-gray-200 rounded">Cancelar</button>
+                              <button type="submit" className="px-4 py-2 bg-brand-600 text-white rounded hover:bg-brand-700">
+                                  {editingTechId ? 'Actualizar' : 'Guardar'}
+                              </button>
                           </div>
                       </form>
                   </div>
@@ -367,13 +437,14 @@ const AdminDashboard: React.FC = () => {
                             <th className="px-6 py-3">Nombre</th>
                             <th className="px-6 py-3">Contacto</th>
                             <th className="px-6 py-3">Centro</th>
-                            <th className="px-6 py-3">Casos Asignados</th>
+                            <th className="px-6 py-3">Estado</th>
+                            <th className="px-6 py-3 text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {technicians.length === 0 ? (
                             <tr>
-                                <td colSpan={4} className="px-6 py-8 text-center text-gray-400">No hay técnicos registrados.</td>
+                                <td colSpan={5} className="px-6 py-8 text-center text-gray-400">No hay técnicos registrados.</td>
                             </tr>
                         ) : (
                             technicians.map(t => {
@@ -383,7 +454,6 @@ const AdminDashboard: React.FC = () => {
                                     <tr key={t.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4">
                                             <div className="font-medium text-gray-900">{t.name} {t.lastName}</div>
-                                            <div className="text-xs text-gray-400">ID: {t.id}</div>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-600">
                                             <div>{t.email}</div>
@@ -394,6 +464,24 @@ const AdminDashboard: React.FC = () => {
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                                 {activeCases} Activos / {totalCases} Totales
                                             </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex justify-end space-x-2">
+                                                <button 
+                                                    onClick={() => openEditTechForm(t)}
+                                                    className="p-1 text-gray-400 hover:text-brand-600 transition"
+                                                    title="Editar"
+                                                >
+                                                    <Edit className="w-5 h-5" />
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDeleteTechnician(t.id)}
+                                                    className="p-1 text-gray-400 hover:text-red-600 transition"
+                                                    title="Eliminar"
+                                                >
+                                                    <Trash className="w-5 h-5" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
