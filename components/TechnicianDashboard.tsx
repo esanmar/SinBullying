@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import ReactQuill from 'react-quill';
 import { getCases, updateCaseStatus, assignCaseToTechnician } from '../services/bkndService';
 import { BullyingCase, CaseStatus, User } from '../types';
 import { FileText, Calendar, AlertTriangle, UserIcon, Briefcase } from './Icons';
+
+// Definir helper para llamada API directa de actualización de acciones (para evitar recargar todo)
+const updateTechnicianActions = async (id: string, content: string) => {
+    const res = await fetch('/api/cases', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, technicianActions: content })
+    });
+    if (!res.ok) throw new Error("Error guardando acciones");
+};
 
 interface Props {
   user: User;
@@ -12,6 +23,10 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [selectedCase, setSelectedCase] = useState<BullyingCase | null>(null);
   const [viewMode, setViewMode] = useState<'mine' | 'unassigned'>('mine');
+  
+  // State for WYSIWYG
+  const [actionsContent, setActionsContent] = useState('');
+  const [savingActions, setSavingActions] = useState(false);
 
   const fetchCases = async () => {
     setLoading(true);
@@ -28,7 +43,14 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
 
   useEffect(() => {
     fetchCases();
-  }, []); // Only runs once on mount, or we could add a refresher
+  }, []); 
+
+  // Sync editor content when selected case changes
+  useEffect(() => {
+      if (selectedCase) {
+          setActionsContent(selectedCase.technicianActions || '');
+      }
+  }, [selectedCase]);
 
   const handleStatusUpdate = async (id: string, newStatus: CaseStatus) => {
     if (selectedCase && selectedCase.id === id) {
@@ -46,21 +68,31 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
 
   const handleSelfAssign = async (id: string) => {
       try {
-          // Asignar al usuario actual y poner en 'revision' automáticamente
           await assignCaseToTechnician(id, user.id);
-          
-          // Actualizar estado local
           setCases(prev => prev.map(c => c.id === id ? {...c, assignedTechnicianId: user.id, status: 'revision'} : c));
-          
-          // Actualizar selección si es necesario
           if (selectedCase?.id === id) {
              setSelectedCase({...selectedCase, assignedTechnicianId: user.id, status: 'revision'});
           }
-          
           alert("Caso asignado correctamente. Ahora está en tu lista de 'Mis Casos'.");
           setViewMode('mine');
       } catch (e) {
           alert("Error al asignarse el caso");
+      }
+  };
+
+  const handleSaveActions = async () => {
+      if (!selectedCase) return;
+      setSavingActions(true);
+      try {
+          await updateTechnicianActions(selectedCase.id, actionsContent);
+          // Actualizar estado local
+          setCases(prev => prev.map(c => c.id === selectedCase.id ? {...c, technicianActions: actionsContent} : c));
+          setSelectedCase({...selectedCase, technicianActions: actionsContent});
+          alert("Acciones guardadas correctamente.");
+      } catch (e) {
+          alert("Error al guardar las acciones.");
+      } finally {
+          setSavingActions(false);
       }
   };
 
@@ -79,11 +111,19 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
 
   const displayedCases = viewMode === 'mine' ? myCases : unassignedCases;
 
-  // Stats for the technician
   const stats = {
     totalAssigned: myCases.length,
     active: myCases.filter(c => c.status !== 'resuelto').length,
     available: unassignedCases.length
+  };
+
+  // Configuración simple para Quill
+  const modules = {
+    toolbar: [
+      ['bold', 'italic', 'underline'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['clean']
+    ],
   };
 
   return (
@@ -124,7 +164,7 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
           </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[750px]"> {/* Aumentamos altura para el editor */}
         
         {/* List Column */}
         <div className="lg:col-span-1 bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-full">
@@ -209,7 +249,7 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
                     </div>
 
                     <div className="space-y-6">
-                         {/* Contact Info (Only visible to technician/admin) */}
+                         {/* Contact Info */}
                          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
                             <h4 className="text-sm font-bold text-blue-800 mb-2 flex items-center">
                                 <UserIcon className="w-4 h-4 mr-2" /> Datos del Estudiante
@@ -226,49 +266,84 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
                             </div>
                         </div>
 
-                        <div>
-                            <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Descripción</h4>
-                            <p className="text-gray-800 bg-gray-50 p-4 rounded-lg leading-relaxed border border-gray-100">
-                                {selectedCase.description}
-                            </p>
-                        </div>
-
-                        <div>
-                            <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Lugar e Implicados</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="p-3 bg-gray-50 rounded border border-gray-100">
-                                    <span className="block text-xs text-gray-500 uppercase">Ubicación</span>
-                                    <span className="font-medium text-gray-800">{selectedCase.location}</span>
-                                </div>
-                                <div className="p-3 bg-gray-50 rounded border border-gray-100">
-                                    <span className="block text-xs text-gray-500 uppercase">Implicados</span>
-                                    <span className="font-medium text-gray-800">{selectedCase.involvedPeople || "N/A"}</span>
+                        {/* Descripción y Evidencias */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Descripción</h4>
+                                <p className="text-gray-800 bg-gray-50 p-4 rounded-lg leading-relaxed border border-gray-100 h-40 overflow-y-auto">
+                                    {selectedCase.description}
+                                </p>
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Detalles</h4>
+                                <div className="space-y-2">
+                                     <div className="p-2 bg-gray-50 rounded border border-gray-100">
+                                        <span className="block text-xs text-gray-500 uppercase">Ubicación</span>
+                                        <span className="font-medium text-gray-800">{selectedCase.location}</span>
+                                    </div>
+                                    <div className="p-2 bg-gray-50 rounded border border-gray-100">
+                                        <span className="block text-xs text-gray-500 uppercase">Implicados</span>
+                                        <span className="font-medium text-gray-800">{selectedCase.involvedPeople || "N/A"}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div>
-                            <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Evidencias Adjuntas</h4>
-                            {selectedCase.evidence && selectedCase.evidence.length > 0 ? (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        
+                        {/* Evidence Section */}
+                        {selectedCase.evidence && selectedCase.evidence.length > 0 && (
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Evidencias</h4>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                     {selectedCase.evidence.map((ev, idx) => (
                                         <div key={idx} className="border rounded-lg p-2 bg-gray-50 hover:bg-gray-100 transition">
-                                            {ev.fileType.includes('image') ? (
-                                                <img src={ev.url} alt="evidencia" className="rounded w-full h-32 object-cover mb-2"/>
-                                            ) : (
-                                                <div className="w-full h-32 bg-gray-200 flex items-center justify-center rounded mb-2">
-                                                    <FileText className="text-gray-400" />
-                                                </div>
-                                            )}
-                                            <p className="text-xs text-gray-500 truncate font-medium">{ev.fileName}</p>
-                                            <a href={ev.url} download={ev.fileName} className="text-xs text-brand-600 hover:underline block mt-1">Descargar</a>
+                                            <a href={ev.url} download={ev.fileName} className="block text-xs text-brand-600 hover:underline truncate text-center">
+                                                {ev.fileName}
+                                            </a>
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* WYSIWYG Editor Actions */}
+                        <div className="border-t pt-6">
+                            <div className="flex justify-between items-center mb-2">
+                                <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                                    Registro de Acciones Realizadas
+                                </h4>
+                                {viewMode === 'mine' && (
+                                    <button 
+                                        onClick={handleSaveActions}
+                                        disabled={savingActions}
+                                        className="bg-brand-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-brand-700 disabled:opacity-50 transition"
+                                    >
+                                        {savingActions ? 'Guardando...' : 'Guardar Acciones'}
+                                    </button>
+                                )}
+                            </div>
+                            
+                            {viewMode === 'mine' ? (
+                                <div className="bg-white">
+                                    <ReactQuill 
+                                        theme="snow"
+                                        value={actionsContent}
+                                        onChange={setActionsContent}
+                                        modules={modules}
+                                        className="h-40 mb-10" // mb-10 to account for toolbar
+                                    />
+                                    <p className="text-xs text-gray-400 mt-2">Registra aquí las llamadas, reuniones o medidas disciplinarias tomadas.</p>
+                                </div>
                             ) : (
-                                <p className="text-gray-400 italic text-sm border-l-2 border-gray-300 pl-3">Sin evidencias adjuntas.</p>
+                                <div className="bg-gray-50 p-4 rounded border border-gray-200 min-h-[100px] text-gray-600">
+                                    {selectedCase.technicianActions ? (
+                                        <div className="prose prose-sm" dangerouslySetInnerHTML={{ __html: selectedCase.technicianActions }} />
+                                    ) : (
+                                        <em className="text-gray-400">Sin acciones registradas aún.</em>
+                                    )}
+                                </div>
                             )}
                         </div>
+
                     </div>
                 </div>
             ) : (

@@ -40,10 +40,17 @@ export default async function handler(req, res) {
         admin_notes TEXT,
         assigned_technician_id UUID REFERENCES users(id),
         evidence_json JSONB DEFAULT '[]'::jsonb,
+        technician_actions TEXT, 
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
+
+    // Intentar añadir la columna nueva si la tabla ya existía
+    try {
+        await sql`ALTER TABLE cases ADD COLUMN IF NOT EXISTS technician_actions TEXT;`;
+    } catch (e) { console.log("Migración cases: columna technician_actions ya existe"); }
+
 
     // 3. Tabla de Códigos OTP (Para verificación segura)
     await sql`
@@ -59,7 +66,7 @@ export default async function handler(req, res) {
     // Limpieza de códigos viejos automática (opcional, pero buena práctica si se corre setup periódicamente)
     await sql`DELETE FROM otp_codes WHERE expires_at < NOW()`;
 
-    return res.status(200).json({ message: 'Base de datos y tablas OTP actualizadas correctamente' });
+    return res.status(200).json({ message: 'Base de datos actualizada con campo technician_actions' });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }

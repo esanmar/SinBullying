@@ -340,6 +340,21 @@ const AdminDashboard: React.FC = () => {
                                     <p className="text-gray-400 italic text-sm border-l-2 border-gray-300 pl-3">Sin evidencias adjuntas.</p>
                                 )}
                             </div>
+
+                            {/* Admin View of Technician Actions */}
+                            <div className="border-t pt-4">
+                                <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-2">
+                                    Acciones del Técnico
+                                </h4>
+                                <div className="bg-gray-50 p-4 rounded border border-gray-200 min-h-[100px] text-gray-600">
+                                    {selectedCase.technicianActions ? (
+                                        <div className="prose prose-sm" dangerouslySetInnerHTML={{ __html: selectedCase.technicianActions }} />
+                                    ) : (
+                                        <em className="text-gray-400">Sin acciones registradas por el técnico.</em>
+                                    )}
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 ) : (

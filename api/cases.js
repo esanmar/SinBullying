@@ -19,6 +19,7 @@ export default async function handler(req, res) {
         adminNotes: r.admin_notes,
         assignedTechnicianId: r.assigned_technician_id,
         evidence: r.evidence_json || [],
+        technicianActions: r.technician_actions,
         createdAt: r.created_at,
         updatedAt: r.updated_at
       }));
@@ -45,7 +46,7 @@ export default async function handler(req, res) {
       return res.status(201).json({ ...data, ...newCase });
     }
 
-    // PUT: Update case (status or assignment)
+    // PUT: Update case (status, assignment, or actions)
     if (req.method === 'PUT') {
       const data = req.body;
       
@@ -64,6 +65,15 @@ export default async function handler(req, res) {
           SET assigned_technician_id = ${techId}, status = 'revision', updated_at = CURRENT_TIMESTAMP
           WHERE id = ${data.id}
         `;
+      }
+
+      // Nuevo: Actualizar acciones del técnico
+      if (data.technicianActions !== undefined) {
+          await sql`
+            UPDATE cases
+            SET technician_actions = ${data.technicianActions}, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ${data.id}
+          `;
       }
 
       return res.status(200).json({ success: true });

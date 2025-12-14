@@ -35,6 +35,7 @@ export interface BullyingCase {
   updatedAt: string;
   adminNotes?: string;
   assignedTechnicianId?: string | null; // Nuevo campo para asignación
+  technicianActions?: string; // HTML content from WYSIWYG
 }
 
 export interface DashboardStats {
