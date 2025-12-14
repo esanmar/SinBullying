@@ -68,7 +68,7 @@ export default async function handler(req: any, res: any) {
       return res.status(201).json(newUser);
     }
 
-    // PUT: Update User (Admin editing technician)
+    // PUT: Update User (Admin editing technician OR User editing profile)
     if (req.method === 'PUT') {
         const data = req.body;
         
@@ -76,25 +76,44 @@ export default async function handler(req: any, res: any) {
             return res.status(400).json({ error: "Falta ID de usuario" });
         }
 
+        let updatedRows;
+
         // Si se envía contraseña, la encriptamos, sino mantenemos la vieja (update dinámico)
         if (data.password && data.password.length > 0) {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(data.password, salt);
             
-            await sql`
+            const result = await sql`
                 UPDATE users 
                 SET name=${data.name}, last_name=${data.lastName}, email=${data.email}, phone=${data.phone}, center=${data.center}, password=${hashedPassword}
                 WHERE id=${data.id}
+                RETURNING id, name, last_name, email, role, phone, center
             `;
+            updatedRows = result.rows;
         } else {
-            await sql`
+            const result = await sql`
                 UPDATE users 
                 SET name=${data.name}, last_name=${data.lastName}, email=${data.email}, phone=${data.phone}, center=${data.center}
                 WHERE id=${data.id}
+                RETURNING id, name, last_name, email, role, phone, center
             `;
+            updatedRows = result.rows;
         }
 
-        return res.status(200).json({ success: true });
+        if (updatedRows.length > 0) {
+            const u = updatedRows[0];
+            return res.status(200).json({
+                id: u.id,
+                name: u.name,
+                lastName: u.last_name,
+                email: u.email,
+                role: u.role,
+                phone: u.phone,
+                center: u.center
+            });
+        } else {
+             return res.status(404).json({ error: "Usuario no encontrado" });
+        }
     }
 
     // DELETE: Remove User

@@ -40,6 +40,16 @@ export const registerUser = async (data: any): Promise<User> => {
     return api('users', 'POST', data);
 };
 
+export const updateUserProfile = async (id: string, data: Partial<User> & { password?: string }): Promise<User> => {
+    const updatedUser = await api('users', 'PUT', { id, ...data });
+    // Actualizar sesión local si es el usuario actual
+    const current = getCurrentUser();
+    if (current && current.id === id) {
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
+    }
+    return updatedUser;
+};
+
 export const requestPasswordReset = async (email: string): Promise<void> => {
     return api('password', 'POST', { action: 'request', email });
 };
