@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createCase, uploadFile, getCasesByStudent, sendVerificationCode, verifyOTP, getTechnicians, updateCaseStudentNotes } from '../services/bkndService';
 import { Upload, CheckCircle, AlertTriangle, FileText, Calendar, MessageCircle, UserIcon } from './Icons';
 import { User, Evidence, BullyingCase } from '../types';
+import { Link } from 'react-router-dom';
 
 interface Props {
   user: User;
@@ -276,7 +277,6 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
 
       {activeTab === 'new' ? (
           <>
-            {/* ... (Form code identical to before, omitted for brevity, logic handled above) ... */}
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-lg">
                 <div className="flex">
                 <div className="flex-shrink-0">
@@ -284,7 +284,7 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
                 </div>
                 <div className="ml-3">
                     <p className="text-sm text-yellow-700">
-                    Tu reporte es seguro. Necesitaremos verificar tu identidad mediante un código que enviaremos a tu email.
+                    Tu reporte es seguro y confidencial.
                     </p>
                 </div>
                 </div>
@@ -383,6 +383,9 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
                         )}
                     </div>
                     <div className="pt-4">
+                        <p className="text-xs text-center text-gray-400 mb-2">
+                            Al enviar este reporte, aceptas nuestra <Link to="/privacy" target="_blank" className="underline hover:text-gray-600">política de privacidad</Link>.
+                        </p>
                         <button type="submit" disabled={loading || uploading} className="w-full py-3 px-4 rounded-lg text-white font-medium bg-brand-600 hover:bg-brand-700 disabled:opacity-50">
                         {loading ? 'Procesando...' : 'Continuar a Verificación'}
                         </button>

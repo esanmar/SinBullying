@@ -5,6 +5,8 @@ import { User, Role } from './types';
 import StudentDashboard from './components/StudentDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import TechnicianDashboard from './components/TechnicianDashboard';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import CookieBanner from './components/CookieBanner';
 import { Shield, LogOut } from './components/Icons';
 
 // --- PASSWORD RESET COMPONENT ---
@@ -88,6 +90,7 @@ const AuthScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState(''); // Only for register
   const [role, setRole] = useState<Role>('student');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -98,6 +101,7 @@ const AuthScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
       setSuccessMsg('');
       setPassword('');
       setName('');
+      setAcceptedTerms(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -118,9 +122,9 @@ const AuthScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
           const user = await login(email, role, password);
           onLogin(user);
       } else {
-          // Register (Only for Students via this form)
-          // Technicians are created by Admin usually, but we allow self-register for demo if role selected
+          // Register
           if (role === 'admin') throw new Error("No puedes registrarte como Admin.");
+          if (!acceptedTerms) throw new Error("Debes aceptar la política de privacidad.");
           
           await registerUser({
               email, password, name, role
@@ -231,6 +235,25 @@ const AuthScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
                 />
              </div>
           )}
+
+          {/* Privacy Checkbox for Registration */}
+          {!isLogin && !isForgotPassword && (
+              <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="privacy"
+                      type="checkbox"
+                      required
+                      className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-brand-300"
+                      checked={acceptedTerms}
+                      onChange={e => setAcceptedTerms(e.target.checked)}
+                    />
+                  </div>
+                  <label htmlFor="privacy" className="ml-2 text-xs text-gray-600">
+                      Acepto la <Link to="/privacy" target="_blank" className="text-brand-600 hover:underline">Política de Privacidad</Link> y el tratamiento de mis datos para la gestión del reporte.
+                  </label>
+              </div>
+          )}
             
           {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">{error}</div>}
           {successMsg && <div className="p-3 bg-green-50 text-green-600 text-sm rounded-lg border border-green-100">{successMsg}</div>}
@@ -263,6 +286,10 @@ const AuthScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
                 )
               )}
           </div>
+          
+          <div className="pt-4 mt-4 border-t border-gray-100 text-center">
+             <Link to="/privacy" className="text-xs text-gray-400 hover:text-gray-600">Política de Privacidad</Link>
+          </div>
 
         </form>
       </div>
@@ -278,8 +305,10 @@ const DashboardLayout = ({ children, user, onLogout }: { children?: React.ReactN
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <Shield className="h-8 w-8 text-brand-600 mr-2" />
-              <span className="font-bold text-xl text-gray-900 hidden sm:block">SinBullying</span>
+              <Link to="/" className="flex items-center">
+                <Shield className="h-8 w-8 text-brand-600 mr-2" />
+                <span className="font-bold text-xl text-gray-900 hidden sm:block">SinBullying</span>
+              </Link>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500 hidden sm:block">Hola, {user.name}</span>
@@ -334,11 +363,15 @@ const App = () => {
 
   return (
     <HashRouter>
+      <CookieBanner />
       <Routes>
         <Route path="/login" element={!user ? <AuthScreen onLogin={handleLogin} /> : <Navigate to="/" />} />
         
         {/* Reset Password Route */}
         <Route path="/reset-password" element={<ResetPasswordScreen />} />
+        
+        {/* Privacy Route */}
+        <Route path="/privacy" element={<PrivacyPolicy />} />
 
         <Route path="/" element={
           user ? (
