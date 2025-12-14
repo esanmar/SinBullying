@@ -55,9 +55,9 @@ Esta opción es la que menos fallos da.
 2. Ve a tu panel de Vercel ([vercel.com/dashboard](https://vercel.com/dashboard)).
 3. Haz clic en el botón negro **"Add New..."** -> **"Project"**.
 4. Verás tu repositorio de GitHub en la lista. Dale a **"Import"**.
-5. En la sección **Environment Variables**, añade una nueva:
-   - **Key:** `RESEND_API_KEY`
-   - **Value:** (Pega la clave `re_...` que guardaste en el paso anterior).
+5. En la sección **Environment Variables**, añade **DOS** variables:
+   - **Key:** `RESEND_API_KEY` | **Value:** (Tu clave `re_...` de Resend).
+   - **Key:** `ADMIN_EMAIL`    | **Value:** (El correo del director/admin, ej: `director@escuela.com`).
 6. Dale a **Deploy**.
 7. Una vez termine, ve a la pestaña **Storage** de tu proyecto en Vercel:
    - Dale a "Connect Store" -> "Postgres" -> "Create New".
@@ -66,7 +66,7 @@ Esta opción es la que menos fallos da.
 ### Opción B: Usar el Botón de Despliegue Rápido
 **Nota:** Para que este botón funcione, debes estar viendo este archivo **desde tu propio repositorio** en GitHub, o editar el enlace manualmente.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FTU_USUARIO%2FTU_REPOSITORIO&project-name=sinbullying-app&repository-name=sinbullying-app&env=RESEND_API_KEY&envDescription=La%20clave%20que%20copiaste%20de%20Resend%20(empieza%20por%20re_)&stores=[{"type":"postgres"},{"type":"blob"}])
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FTU_USUARIO%2FTU_REPOSITORIO&project-name=sinbullying-app&repository-name=sinbullying-app&env=RESEND_API_KEY,ADMIN_EMAIL&envDescription=La%20clave%20de%20Resend%20y%20el%20email%20del%20Administrador&stores=[{"type":"postgres"},{"type":"blob"}])
 
 *Si usas el botón, recuerda cambiar `TU_USUARIO/TU_REPOSITORIO` en la URL del navegador si falla.*
 
@@ -81,7 +81,7 @@ Una vez que la web esté online (tendrás una URL tipo `sinbullying-app.vercel.a
 
 2. **Entrar como Admin:**
    - Ve a `https://TU-WEB.vercel.app/#/login`
-   - Entra como Admin usando cualquier correo que contenga la palabra "admin" (ej. `director_admin@escuela.edu`).
+   - Entra como Admin usando **EXACTAMENTE** el email que pusiste en la variable `ADMIN_EMAIL`.
 
 3. **Restricción de Resend (Modo Prueba):**
    - Si no has verificado un dominio propio en Resend (cuesta dinero o requiere conocimientos técnicos), Resend solo enviará emails a la dirección de correo con la que te registraste.

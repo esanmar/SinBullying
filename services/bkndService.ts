@@ -24,14 +24,16 @@ const api = async (endpoint: string, method: string = 'GET', body?: any) => {
 // ==========================================
 
 export const login = async (email: string, role: Role): Promise<User> => {
-  // 1. Admin Hardcoded (Seguridad básica para plantilla)
+  // 1. Admin Login (Server-side check of Env Var)
   if (role === 'admin') {
-     if (!email.includes('admin')) {
-        throw new Error("Solo correos admin permitidos");
+     try {
+        const adminUser = await api('auth', 'POST', { email, role: 'admin' });
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(adminUser));
+        return adminUser;
+     } catch (e: any) {
+        console.error(e);
+        throw new Error(e.message || "Email no autorizado como Administrador");
      }
-     const adminUser: User = { id: 'admin_master', name: 'Administrador', email, role: 'admin' };
-     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(adminUser));
-     return adminUser;
   }
 
   // 2. Technicians (API Call)
