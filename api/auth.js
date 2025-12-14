@@ -3,23 +3,27 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, role } = req.body;
+  const { email, role, password } = req.body;
 
   try {
     if (role === 'admin') {
-      // 1. Recuperar la variable de entorno de Vercel
+      // 1. Recuperar variables de entorno
       const validAdminEmail = process.env.ADMIN_EMAIL;
+      const validAdminPassword = process.env.ADMIN_PASSWORD;
 
-      // 2. Verificar que la variable existe
-      if (!validAdminEmail) {
+      // 2. Verificar configuración del servidor
+      if (!validAdminEmail || !validAdminPassword) {
         return res.status(500).json({ 
-          error: "Error de configuración: ADMIN_EMAIL no está definido en Vercel." 
+          error: "Error de configuración: ADMIN_EMAIL o ADMIN_PASSWORD no definidos en Vercel." 
         });
       }
 
-      // 3. Comparar el email recibido con la variable de entorno
-      // (Soportamos mayúsculas/minúsculas y espacios accidentales)
-      if (email.trim().toLowerCase() === validAdminEmail.trim().toLowerCase()) {
+      // 3. Verificar Credenciales
+      const isEmailValid = email.trim().toLowerCase() === validAdminEmail.trim().toLowerCase();
+      // La contraseña debe coincidir exactamente (case sensitive)
+      const isPasswordValid = password === validAdminPassword;
+
+      if (isEmailValid && isPasswordValid) {
         return res.status(200).json({
           id: 'admin_master',
           name: 'Administrador',
@@ -27,8 +31,9 @@ export default async function handler(req, res) {
           role: 'admin'
         });
       } else {
+        // Retornamos un error genérico por seguridad, o específico si prefieres debug
         return res.status(403).json({ 
-          error: "Acceso denegado: Este correo no es el administrador." 
+          error: "Credenciales incorrectas (Email o Contraseña no válidos)." 
         });
       }
     }

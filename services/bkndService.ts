@@ -23,16 +23,16 @@ const api = async (endpoint: string, method: string = 'GET', body?: any) => {
 // AUTH & USERS
 // ==========================================
 
-export const login = async (email: string, role: Role): Promise<User> => {
+export const login = async (email: string, role: Role, password?: string): Promise<User> => {
   // 1. Admin Login (Server-side check of Env Var)
   if (role === 'admin') {
      try {
-        const adminUser = await api('auth', 'POST', { email, role: 'admin' });
+        const adminUser = await api('auth', 'POST', { email, role: 'admin', password });
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(adminUser));
         return adminUser;
      } catch (e: any) {
         console.error(e);
-        throw new Error(e.message || "Email no autorizado como Administrador");
+        throw new Error(e.message || "Credenciales de Administrador incorrectas");
      }
   }
 

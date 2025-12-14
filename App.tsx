@@ -10,6 +10,7 @@ import { Shield, LogOut } from './components/Icons';
 // --- LOGIN COMPONENT ---
 const LoginScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState(''); // Estado para la contraseña
   const [role, setRole] = useState<Role>('student');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,7 +20,8 @@ const LoginScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
     setIsLoading(true);
     setError('');
     try {
-      const user = await login(email, role);
+      // Pasamos password si el rol es admin
+      const user = await login(email, role, role === 'admin' ? password : undefined);
       onLogin(user);
     } catch (e: any) {
       setError(e.message || "Error al iniciar sesión");
@@ -51,6 +53,21 @@ const LoginScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
               onChange={e => setEmail(e.target.value)}
             />
           </div>
+
+          {/* Input de Contraseña: Solo visible para Admin */}
+          {role === 'admin' && (
+             <div className="animate-fade-in">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña de Administrador</label>
+                <input 
+                  type="password" 
+                  required
+                  placeholder="••••••••"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand-500 outline-none transition"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                />
+             </div>
+          )}
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Soy...</label>
