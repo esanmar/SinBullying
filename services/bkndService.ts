@@ -1,4 +1,4 @@
-import { BullyingCase, User, Role, CaseStatus, Evidence } from '../types';
+import { BullyingCase, User, Role, CaseStatus, Evidence, CaseLog } from '../types';
 
 const CURRENT_USER_KEY = 'sinbullying_current_user';
 
@@ -131,8 +131,21 @@ export const getCasesByTechnician = async (technicianId: string): Promise<Bullyi
     return all.filter((c: BullyingCase) => c.assignedTechnicianId === technicianId);
 };
 
-export const updateCaseStatus = async (id: string, status: CaseStatus, notes?: string): Promise<BullyingCase> => {
-    return api(`cases`, 'PUT', { id, status, adminNotes: notes });
+export const updateCaseStatus = async (id: string, status: CaseStatus, notes?: string, modifierUser?: string): Promise<BullyingCase> => {
+    return api(`cases`, 'PUT', { id, status, adminNotes: notes, modifierUser });
+};
+
+export const updateCaseFullDetails = async (id: string, data: Partial<BullyingCase>, modifierUser: string): Promise<void> => {
+    return api('cases', 'PUT', {
+        id,
+        ...data,
+        fullEdit: true,
+        modifierUser // "Name (Role)"
+    });
+};
+
+export const getCaseLogs = async (caseId: string): Promise<CaseLog[]> => {
+    return api(`cases?logsForCaseId=${caseId}`);
 };
 
 export const assignCaseToTechnician = async (caseId: string, technicianId: string | null): Promise<void> => {

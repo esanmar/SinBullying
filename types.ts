@@ -39,6 +39,16 @@ export interface BullyingCase {
   studentNotes?: string; // Nuevo campo para notas del estudiante
 }
 
+export interface CaseLog {
+  id: string;
+  caseId: string;
+  changedBy: string; // Name + Role
+  field: string;
+  oldValue: string;
+  newValue: string;
+  timestamp: string;
+}
+
 export interface DashboardStats {
   total: number;
   pending: number;

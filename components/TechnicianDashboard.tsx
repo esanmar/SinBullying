@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import ReactQuill from 'react-quill';
-import { getCases, updateCaseStatus, assignCaseToTechnician } from '../services/bkndService';
-import { BullyingCase, CaseStatus, User } from '../types';
-import { FileText, Calendar, AlertTriangle, UserIcon, Briefcase } from './Icons';
+import { getCases, updateCaseStatus, assignCaseToTechnician, updateCaseFullDetails, getCaseLogs } from '../services/bkndService';
+import { BullyingCase, CaseStatus, User, CaseLog } from '../types';
+import { FileText, Calendar, AlertTriangle, UserIcon, Briefcase, Edit } from './Icons';
 
 // Definir helper para llamada API directa de actualización de acciones
 const updateTechnicianActions = async (id: string, content: string) => {
@@ -24,6 +24,12 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
   const [selectedCase, setSelectedCase] = useState<BullyingCase | null>(null);
   const [viewMode, setViewMode] = useState<'mine' | 'unassigned'>('mine');
   
+  // Edit & Logs State
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState<Partial<BullyingCase>>({});
+  const [logs, setLogs] = useState<CaseLog[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+
   // State for WYSIWYG
   const [actionsContent, setActionsContent] = useState('');
   const [savingActions, setSavingActions] = useState(false);
@@ -45,10 +51,15 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
     fetchCases();
   }, []); 
 
-  // Sync editor content when selected case changes
+  // Sync editor content and fetch logs when selected case changes
   useEffect(() => {
       if (selectedCase) {
           setActionsContent(selectedCase.technicianActions || '');
+          setLoadingLogs(true);
+          getCaseLogs(selectedCase.id).then(data => {
+              setLogs(data);
+              setLoadingLogs(false);
+          });
       }
   }, [selectedCase]);
 
@@ -59,7 +70,8 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
     setCases(prev => prev.map(c => c.id === id ? {...c, status: newStatus} : c));
 
     try {
-        await updateCaseStatus(id, newStatus);
+        const modifier = `${user.name} (Técnico)`;
+        await updateCaseStatus(id, newStatus, undefined, modifier);
     } catch (error) {
         alert("Error actualizando estado");
         fetchCases();
@@ -93,6 +105,41 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
       } finally {
           setSavingActions(false);
       }
+  };
+
+  const startEditing = () => {
+    if (!selectedCase) return;
+    setEditFormData({
+        description: selectedCase.description,
+        location: selectedCase.location,
+        dateOfIncident: selectedCase.dateOfIncident,
+        involvedPeople: selectedCase.involvedPeople,
+        contactEmail: selectedCase.contactEmail,
+        contactPhone: selectedCase.contactPhone
+    });
+    setIsEditing(true);
+  };
+
+  const saveEdits = async () => {
+    if (!selectedCase) return;
+    try {
+        const modifier = `${user.name} (Técnico)`;
+        await updateCaseFullDetails(selectedCase.id, editFormData, modifier);
+        
+        // Update local
+        const updatedCase = { ...selectedCase, ...editFormData };
+        setSelectedCase(updatedCase);
+        setCases(prev => prev.map(c => c.id === updatedCase.id ? updatedCase : c));
+        
+        // Refresh logs
+        const newLogs = await getCaseLogs(updatedCase.id);
+        setLogs(newLogs);
+
+        setIsEditing(false);
+        alert("Datos del caso actualizados.");
+    } catch (e) {
+        alert("Error al actualizar datos.");
+    }
   };
 
   const getStatusColor = (status: CaseStatus) => {
@@ -180,7 +227,7 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
                 displayedCases.map(c => (
                     <div 
                         key={c.id}
-                        onClick={() => setSelectedCase(c)}
+                        onClick={() => { setSelectedCase(c); setIsEditing(false); }}
                         className={`p-3 rounded-lg border cursor-pointer transition hover:shadow-md ${selectedCase?.id === c.id ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500' : 'border-gray-100 bg-white'}`}
                     >
                         <div className="flex justify-between items-start mb-1">
@@ -222,28 +269,40 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
                                 </button>
                             ) : (
                                 <>
-                                    {selectedCase.status === 'resuelto' ? (
-                                        <button 
-                                            onClick={() => handleStatusUpdate(selectedCase.id, 'revision')}
-                                            className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 shadow-sm transition"
-                                        >
-                                            Reabrir Caso
-                                        </button>
+                                    {isEditing ? (
+                                        <>
+                                            <button onClick={() => setIsEditing(false)} className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400">Cancelar</button>
+                                            <button onClick={saveEdits} className="px-3 py-1 bg-brand-600 text-white text-sm rounded hover:bg-brand-700">Guardar</button>
+                                        </>
                                     ) : (
                                         <>
-                                            <button 
-                                                onClick={() => handleStatusUpdate(selectedCase.id, 'resuelto')}
-                                                className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 shadow-sm transition"
-                                            >
-                                                Marcar Resuelto
+                                            <button onClick={startEditing} className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded hover:bg-blue-200 transition flex items-center">
+                                                <Edit className="w-4 h-4 mr-1" /> Editar
                                             </button>
-                                            {selectedCase.status !== 'revision' && (
+                                            {selectedCase.status === 'resuelto' ? (
                                                 <button 
                                                     onClick={() => handleStatusUpdate(selectedCase.id, 'revision')}
-                                                    className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 shadow-sm transition"
+                                                    className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 shadow-sm transition"
                                                 >
-                                                    En Proceso
+                                                    Reabrir Caso
                                                 </button>
+                                            ) : (
+                                                <>
+                                                    <button 
+                                                        onClick={() => handleStatusUpdate(selectedCase.id, 'resuelto')}
+                                                        className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 shadow-sm transition"
+                                                    >
+                                                        Marcar Resuelto
+                                                    </button>
+                                                    {selectedCase.status !== 'revision' && (
+                                                        <button 
+                                                            onClick={() => handleStatusUpdate(selectedCase.id, 'revision')}
+                                                            className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 shadow-sm transition"
+                                                        >
+                                                            En Proceso
+                                                        </button>
+                                                    )}
+                                                </>
                                             )}
                                         </>
                                     )}
@@ -253,44 +312,79 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
                     </div>
 
                     <div className="space-y-6">
-                         {/* Contact Info */}
-                         <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                            <h4 className="text-sm font-bold text-blue-800 mb-2 flex items-center">
-                                <UserIcon className="w-4 h-4 mr-2" /> Datos del Estudiante
-                            </h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <span className="text-blue-500 block text-xs uppercase">Email</span>
-                                    <span className="text-gray-800 font-medium">{selectedCase.contactEmail || "No proporcionado"}</span>
+                         
+                        {isEditing ? (
+                                <div className="space-y-4 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                    <h4 className="font-bold text-blue-800">Modificando Información</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500">Fecha</label>
+                                            <input type="date" className="w-full p-2 border rounded" value={editFormData.dateOfIncident || ''} onChange={e => setEditFormData({...editFormData, dateOfIncident: e.target.value})}/>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500">Ubicación</label>
+                                            <input className="w-full p-2 border rounded" value={editFormData.location || ''} onChange={e => setEditFormData({...editFormData, location: e.target.value})}/>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500">Email Contacto</label>
+                                            <input className="w-full p-2 border rounded" value={editFormData.contactEmail || ''} onChange={e => setEditFormData({...editFormData, contactEmail: e.target.value})}/>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500">Teléfono Contacto</label>
+                                            <input className="w-full p-2 border rounded" value={editFormData.contactPhone || ''} onChange={e => setEditFormData({...editFormData, contactPhone: e.target.value})}/>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="text-xs font-bold text-gray-500">Descripción</label>
+                                            <textarea className="w-full p-2 border rounded h-24" value={editFormData.description || ''} onChange={e => setEditFormData({...editFormData, description: e.target.value})}/>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="text-xs font-bold text-gray-500">Implicados</label>
+                                            <input className="w-full p-2 border rounded" value={editFormData.involvedPeople || ''} onChange={e => setEditFormData({...editFormData, involvedPeople: e.target.value})}/>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <span className="text-blue-500 block text-xs uppercase">Teléfono</span>
-                                    <span className="text-gray-800 font-medium">{selectedCase.contactPhone || "No proporcionado"}</span>
+                        ) : (
+                            <>
+                                {/* Contact Info */}
+                                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                                    <h4 className="text-sm font-bold text-blue-800 mb-2 flex items-center">
+                                        <UserIcon className="w-4 h-4 mr-2" /> Datos del Estudiante
+                                    </h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <span className="text-blue-500 block text-xs uppercase">Email</span>
+                                            <span className="text-gray-800 font-medium">{selectedCase.contactEmail || "No proporcionado"}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-blue-500 block text-xs uppercase">Teléfono</span>
+                                            <span className="text-gray-800 font-medium">{selectedCase.contactPhone || "No proporcionado"}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Descripción</h4>
-                                <p className="text-gray-800 bg-gray-50 p-4 rounded-lg leading-relaxed border border-gray-100 h-40 overflow-y-auto">
-                                    {selectedCase.description}
-                                </p>
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Detalles</h4>
-                                <div className="space-y-2">
-                                     <div className="p-2 bg-gray-50 rounded border border-gray-100">
-                                        <span className="block text-xs text-gray-500 uppercase">Ubicación</span>
-                                        <span className="font-medium text-gray-800">{selectedCase.location}</span>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Descripción</h4>
+                                        <p className="text-gray-800 bg-gray-50 p-4 rounded-lg leading-relaxed border border-gray-100 h-40 overflow-y-auto">
+                                            {selectedCase.description}
+                                        </p>
                                     </div>
-                                    <div className="p-2 bg-gray-50 rounded border border-gray-100">
-                                        <span className="block text-xs text-gray-500 uppercase">Implicados</span>
-                                        <span className="font-medium text-gray-800">{selectedCase.involvedPeople || "N/A"}</span>
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Detalles</h4>
+                                        <div className="space-y-2">
+                                            <div className="p-2 bg-gray-50 rounded border border-gray-100">
+                                                <span className="block text-xs text-gray-500 uppercase">Ubicación</span>
+                                                <span className="font-medium text-gray-800">{selectedCase.location}</span>
+                                            </div>
+                                            <div className="p-2 bg-gray-50 rounded border border-gray-100">
+                                                <span className="block text-xs text-gray-500 uppercase">Implicados</span>
+                                                <span className="font-medium text-gray-800">{selectedCase.involvedPeople || "N/A"}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
+                            </>
+                        )}
 
                          {/* NOTAS DEL ESTUDIANTE (NUEVO) */}
                          {selectedCase.studentNotes && (
@@ -353,6 +447,34 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
                                     )}
                                 </div>
                             )}
+                        </div>
+
+                        {/* AUDIT LOG SECTION */}
+                        <div className="border-t border-gray-200 pt-6 mt-6">
+                            <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
+                                Historial de Cambios (Trazabilidad)
+                            </h4>
+                            <div className="space-y-3">
+                                {loadingLogs ? <p className="text-xs text-gray-400">Cargando historial...</p> : 
+                                    logs.length === 0 ? <p className="text-xs text-gray-400 italic">No hay modificaciones registradas.</p> : 
+                                    logs.map(log => (
+                                        <div key={log.id} className="text-xs flex items-start space-x-2 p-2 bg-gray-50 rounded hover:bg-gray-100">
+                                            <div className="text-gray-400 min-w-[120px]">
+                                                {new Date(log.timestamp).toLocaleString()}
+                                            </div>
+                                            <div>
+                                                <span className="font-bold text-gray-700">{log.changedBy}</span> modificó <span className="font-medium text-brand-600">{log.field}</span>.
+                                                {log.oldValue && log.newValue && (
+                                                    <div className="mt-1 text-gray-500 pl-2 border-l-2 border-gray-300">
+                                                        <span className="line-through opacity-70 block truncate max-w-xs">{log.oldValue}</span>
+                                                        <span className="block text-green-700">{log.newValue}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                }
+                            </div>
                         </div>
 
                     </div>

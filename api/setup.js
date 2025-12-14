@@ -64,11 +64,22 @@ export default async function handler(req, res) {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
-
-    // Limpieza de códigos viejos automática (opcional, pero buena práctica si se corre setup periódicamente)
     await sql`DELETE FROM otp_codes WHERE expires_at < NOW()`;
 
-    return res.status(200).json({ message: 'Base de datos actualizada con campos technician_actions y student_notes' });
+    // 4. Tabla de Trazabilidad (Logs de Cambios)
+    await sql`
+      CREATE TABLE IF NOT EXISTS case_audit_logs (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        case_id UUID REFERENCES cases(id),
+        changed_by TEXT NOT NULL,
+        field TEXT NOT NULL,
+        old_value TEXT,
+        new_value TEXT,
+        timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    return res.status(200).json({ message: 'Base de datos actualizada con tabla de logs.' });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
