@@ -139,6 +139,10 @@ export const assignCaseToTechnician = async (caseId: string, technicianId: strin
     return api(`cases`, 'PUT', { id: caseId, assignedTechnicianId: technicianId });
 };
 
+export const updateCaseStudentNotes = async (id: string, notes: string): Promise<void> => {
+    return api(`cases`, 'PUT', { id, studentNotes: notes });
+};
+
 // ==========================================
 // SECURE VERIFICATION (OTP)
 // ==========================================

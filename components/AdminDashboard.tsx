@@ -313,6 +313,16 @@ const AdminDashboard: React.FC = () => {
                                 </p>
                             </div>
 
+                            {/* NOTAS DEL ESTUDIANTE */}
+                            {selectedCase.studentNotes && (
+                                <div>
+                                    <h4 className="text-sm font-semibold text-brand-600 uppercase tracking-wider mb-2">Notas del Estudiante</h4>
+                                    <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg text-gray-800 italic">
+                                        "{selectedCase.studentNotes}"
+                                    </div>
+                                </div>
+                            )}
+
                             <div>
                                 <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Implicados</h4>
                                 <p className="text-gray-800">{selectedCase.involvedPeople || "No especificado"}</p>
@@ -369,6 +379,8 @@ const AdminDashboard: React.FC = () => {
         </div>
       )}
 
+      {/* Technician Tab... (Omitted as unchanged from previous but included in full file if needed, but context implies we are editing AdminDashboard) */}
+      {/* Keeping previous Technician logic intact */}
       {activeTab === 'technicians' && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="p-6 border-b flex justify-between items-center">

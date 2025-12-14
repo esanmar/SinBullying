@@ -4,7 +4,7 @@ import { getCases, updateCaseStatus, assignCaseToTechnician } from '../services/
 import { BullyingCase, CaseStatus, User } from '../types';
 import { FileText, Calendar, AlertTriangle, UserIcon, Briefcase } from './Icons';
 
-// Definir helper para llamada API directa de actualización de acciones (para evitar recargar todo)
+// Definir helper para llamada API directa de actualización de acciones
 const updateTechnicianActions = async (id: string, content: string) => {
     const res = await fetch('/api/cases', {
         method: 'PUT',
@@ -73,7 +73,7 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
           if (selectedCase?.id === id) {
              setSelectedCase({...selectedCase, assignedTechnicianId: user.id, status: 'revision'});
           }
-          alert("Caso asignado correctamente. Ahora está en tu lista de 'Mis Casos'.");
+          alert("Caso asignado correctamente.");
           setViewMode('mine');
       } catch (e) {
           alert("Error al asignarse el caso");
@@ -85,7 +85,6 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
       setSavingActions(true);
       try {
           await updateTechnicianActions(selectedCase.id, actionsContent);
-          // Actualizar estado local
           setCases(prev => prev.map(c => c.id === selectedCase.id ? {...c, technicianActions: actionsContent} : c));
           setSelectedCase({...selectedCase, technicianActions: actionsContent});
           alert("Acciones guardadas correctamente.");
@@ -105,10 +104,8 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
     }
   };
 
-  // Filter cases
   const myCases = cases.filter(c => c.assignedTechnicianId === user.id);
   const unassignedCases = cases.filter(c => !c.assignedTechnicianId);
-
   const displayedCases = viewMode === 'mine' ? myCases : unassignedCases;
 
   const stats = {
@@ -117,7 +114,6 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
     available: unassignedCases.length
   };
 
-  // Configuración simple para Quill
   const modules = {
     toolbar: [
       ['bold', 'italic', 'underline'],
@@ -148,7 +144,6 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="flex border-b border-gray-200">
           <button 
             onClick={() => { setViewMode('mine'); setSelectedCase(null); }}
@@ -164,7 +159,7 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
           </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[750px]"> {/* Aumentamos altura para el editor */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[750px]">
         
         {/* List Column */}
         <div className="lg:col-span-1 bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-full">
@@ -266,7 +261,6 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
                             </div>
                         </div>
 
-                        {/* Descripción y Evidencias */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Descripción</h4>
@@ -288,8 +282,17 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
                                 </div>
                             </div>
                         </div>
-                        
-                        {/* Evidence Section */}
+
+                         {/* NOTAS DEL ESTUDIANTE (NUEVO) */}
+                         {selectedCase.studentNotes && (
+                             <div>
+                                <h4 className="text-sm font-semibold text-brand-600 uppercase tracking-wider mb-2">Notas del Estudiante</h4>
+                                <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg text-gray-800 italic">
+                                    "{selectedCase.studentNotes}"
+                                </div>
+                             </div>
+                         )}
+
                         {selectedCase.evidence && selectedCase.evidence.length > 0 && (
                             <div>
                                 <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Evidencias</h4>
@@ -305,7 +308,6 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
                             </div>
                         )}
 
-                        {/* WYSIWYG Editor Actions */}
                         <div className="border-t pt-6">
                             <div className="flex justify-between items-center mb-2">
                                 <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
@@ -329,7 +331,7 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
                                         value={actionsContent}
                                         onChange={setActionsContent}
                                         modules={modules}
-                                        className="h-40 mb-10" // mb-10 to account for toolbar
+                                        className="h-40 mb-10" 
                                     />
                                     <p className="text-xs text-gray-400 mt-2">Registra aquí las llamadas, reuniones o medidas disciplinarias tomadas.</p>
                                 </div>
