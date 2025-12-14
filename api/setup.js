@@ -2,15 +2,14 @@ import { sql } from '@vercel/postgres';
 
 export default async function handler(req, res) {
   try {
-    // 1. Crear/Actualizar Tabla de Usuarios (Técnicos y Estudiantes)
-    // Agregamos columnas para password y recuperación si no existen
+    // 1. Tabla de Usuarios
     await sql`
       CREATE TABLE IF NOT EXISTS users (
         id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         name TEXT NOT NULL,
         last_name TEXT,
         email TEXT UNIQUE NOT NULL,
-        password TEXT, -- Hash de la contraseña
+        password TEXT,
         role TEXT NOT NULL CHECK (role IN ('student', 'admin', 'technician')),
         phone TEXT,
         center TEXT,
@@ -20,16 +19,13 @@ export default async function handler(req, res) {
       );
     `;
 
-    // Intentamos añadir las columnas por si la tabla ya existía (migración manual simple)
     try {
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS password TEXT;`;
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token TEXT;`;
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP WITH TIME ZONE;`;
-    } catch (e) {
-        console.log("Columnas ya existen o error en alter:", e.message);
-    }
+    } catch (e) { console.log("Migración users: columnas ya existen"); }
 
-    // 2. Crear Tabla de Casos
+    // 2. Tabla de Casos
     await sql`
       CREATE TABLE IF NOT EXISTS cases (
         id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -49,7 +45,21 @@ export default async function handler(req, res) {
       );
     `;
 
-    return res.status(200).json({ message: 'Base de datos actualizada correctamente' });
+    // 3. Tabla de Códigos OTP (Para verificación segura)
+    await sql`
+      CREATE TABLE IF NOT EXISTS otp_codes (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        email TEXT NOT NULL,
+        code TEXT NOT NULL,
+        expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    // Limpieza de códigos viejos automática (opcional, pero buena práctica si se corre setup periódicamente)
+    await sql`DELETE FROM otp_codes WHERE expires_at < NOW()`;
+
+    return res.status(200).json({ message: 'Base de datos y tablas OTP actualizadas correctamente' });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }

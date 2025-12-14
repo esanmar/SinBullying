@@ -146,10 +146,14 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
 
     setLoading(true);
     try {
-      await sendVerificationCode(formData.contactEmail);
-      setVerificationStep('code');
+      const sent = await sendVerificationCode(formData.contactEmail);
+      if (sent) {
+        setVerificationStep('code');
+      } else {
+        alert("Error al enviar el código. Verifica que el email sea correcto.");
+      }
     } catch (error) {
-      alert("Error al enviar el código de verificación.");
+      alert("Error de conexión.");
     } finally {
       setLoading(false);
     }
@@ -256,7 +260,7 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
                 </div>
                 <div className="ml-3">
                     <p className="text-sm text-yellow-700">
-                    Tu reporte es seguro. Necesitaremos verificar tu identidad mediante un código antes de enviar.
+                    Tu reporte es seguro. Necesitaremos verificar tu identidad mediante un código que enviaremos a tu email.
                     </p>
                 </div>
                 </div>
@@ -414,7 +418,6 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
                             <h3 className="text-xl font-bold text-gray-800">Verificación de Seguridad</h3>
                             <p className="text-gray-500 mt-2">
                                 Hemos enviado un código a <strong>{formData.contactEmail}</strong>.<br/>
-                                <span className="text-xs text-gray-400 italic">(Demo: Revisa la consola del navegador F12)</span>
                             </p>
                             <p className="text-sm text-gray-600 mt-2">Introduce el código para finalizar el reporte.</p>
                         </div>

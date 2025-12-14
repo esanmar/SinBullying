@@ -23,7 +23,6 @@ const api = async (endpoint: string, method: string = 'GET', body?: any) => {
 // ==========================================
 
 export const login = async (email: string, role: Role, password?: string): Promise<User> => {
-  // Ahora TODOS los roles requieren contraseña
   if (!password) {
       throw new Error("La contraseña es obligatoria");
   }
@@ -38,7 +37,6 @@ export const login = async (email: string, role: Role, password?: string): Promi
 };
 
 export const registerUser = async (data: any): Promise<User> => {
-    // Wrapper para registrar tanto estudiantes como técnicos
     return api('users', 'POST', data);
 };
 
@@ -69,7 +67,6 @@ export const updateTechnician = async (id: string, data: Partial<User>): Promise
 };
 
 export const deleteTechnician = async (id: string): Promise<void> => {
-    // Usamos query param para el DELETE
     return api(`users?id=${id}`, 'DELETE');
 };
 
@@ -101,11 +98,11 @@ export const uploadFile = async (file: File): Promise<Evidence> => {
 export const createCase = async (data: Omit<BullyingCase, 'id' | 'status' | 'createdAt' | 'updatedAt'>): Promise<BullyingCase> => {
     const newCase = await api('cases', 'POST', data);
     
-    // Notificación simple (best effort)
+    // Notificación al admin (ahora usa Brevo en el backend)
     try {
         await api('email', 'POST', {
             type: 'new_case',
-            to: 'admin_email_demo@example.com', 
+            to: 'admin_email_demo@example.com', // En backend se puede sobreescribir con env var
             data: {
                 location: data.location,
                 description: data.description,
@@ -126,8 +123,6 @@ export const getCases = async (): Promise<BullyingCase[]> => {
 
 export const getCasesByStudent = async (studentId: string): Promise<BullyingCase[]> => {
     const all = await api('cases');
-    // Si el studentId es un UUID (usuario registrado) filtramos exacto,
-    // si no, podría ser lógica antigua, pero ahora asumimos registro.
     return all.filter((c: BullyingCase) => c.studentId === studentId);
 };
 
@@ -145,19 +140,16 @@ export const assignCaseToTechnician = async (caseId: string, technicianId: strin
 };
 
 // ==========================================
-// VERIFICATION
+// SECURE VERIFICATION (OTP)
 // ==========================================
-// Mantenemos OTP para verificación de email en reportes (doble factor opcional)
+
+// Pide al servidor que genere y envíe el código
 export const sendVerificationCode = async (email: string): Promise<boolean> => {
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
   try {
-      await api('email', 'POST', {
-          type: 'otp',
-          to: email,
-          data: { code }
+      await api('otp', 'POST', {
+          action: 'request',
+          email: email
       });
-      // Guardar temporalmente en local para validar el input del usuario (en backend real se guardaría en DB/Redis)
-      sessionStorage.setItem(`otp_${email}`, code);
       return true;
   } catch (e) {
       console.error(e);
@@ -165,12 +157,17 @@ export const sendVerificationCode = async (email: string): Promise<boolean> => {
   }
 };
 
+// Envía el código introducido por el usuario para que el servidor lo valide
 export const verifyOTP = async (email: string, code: string): Promise<boolean> => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  const stored = sessionStorage.getItem(`otp_${email}`);
-  if (stored === code) {
-      sessionStorage.removeItem(`otp_${email}`);
-      return true;
+  try {
+      const res = await api('otp', 'POST', {
+          action: 'verify',
+          email: email,
+          code: code
+      });
+      return res.valid === true;
+  } catch (e) {
+      console.error(e);
+      return false;
   }
-  return false;
 };

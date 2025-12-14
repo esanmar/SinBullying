@@ -7,8 +7,8 @@ Una plataforma de código abierto para que centros educativos gestionen reportes
 
 ## 💰 ¿Cuánto cuesta?
 Este proyecto está diseñado para funcionar **gratis** con las capas gratuitas de los proveedores:
-- **Vercel Plan Hobby:** Alojamiento, Base de Datos y Almacenamiento (Gratis para siempre para uso personal/no comercial).
-- **Resend:** Envío de correos (3000/mes gratis).
+- **Vercel Plan Hobby:** Alojamiento, Base de Datos y Almacenamiento (Gratis para siempre).
+- **Brevo (Antes Sendinblue):** Envío de correos (300/día gratis), mucho más sencillo de configurar.
 
 ---
 
@@ -16,78 +16,55 @@ Este proyecto está diseñado para funcionar **gratis** con las capas gratuitas 
 
 - **Panel de Estudiante:** Reporte anónimo/identificado, subida de pruebas y chat WhatsApp.
 - **Panel de Administración:** Gestión de casos, asignación de técnicos y estadísticas.
-- **Seguridad:** Verificación por código (OTP) para estudiantes y Contraseña segura para administradores.
+- **Seguridad:** Verificación por código (OTP) seguro en base de datos.
 
 ---
 
 ## 📝 Paso 1: Crear Cuentas (Prerrequisitos)
 
-Antes de instalar nada, necesitas tener acceso a estas dos herramientas gratuitas.
-
-### 1. Crear cuenta en Vercel (El alojamiento)
-Vercel es donde "vive" tu página web.
+### 1. Crear cuenta en Vercel
 1. Ve a [vercel.com/signup](https://vercel.com/signup).
-2. Selecciona **"Hobby"** (es la opción gratuita).
+2. Selecciona **"Hobby"**.
 3. Escribe tu nombre y elige **"Continue with GitHub"**.
-   - *Si no tienes GitHub, créate uno en [github.com](https://github.com) primero. Es necesario para guardar tu código.*
-4. Sigue los pasos de verificación telefónica si te lo piden.
 
-### 2. Obtener la API Key de Resend (Para los emails)
-Resend es el servicio que envía los códigos de seguridad a los alumnos.
-1. Ve a [resend.com](https://resend.com) y regístrate (puedes usar tu GitHub o Google).
-2. Una vez dentro, en el menú lateral izquierdo, haz clic en **API Keys**.
-3. Haz clic en el botón negro **"Create API Key"**.
-4. En "Name", pon el nombre de tu escuela o proyecto (ej. `SinBullying`).
-5. Deja "Permission" en "Full Access" y dale a **Add**.
-6. **¡IMPORTANTE!** Copia la clave que aparece (empieza por `re_...`).
-   - *Guárdala en un bloc de notas ahora mismo. Solo se muestra una vez.*
+### 2. Obtener la Clave SMTP de Brevo
+Brevo es el servicio de email.
+1. Ve a [brevo.com](https://www.brevo.com/es/) y crea una cuenta gratuita.
+2. Arriba a la derecha, haz clic en tu nombre -> **SMTP & API**.
+3. Ve a la pestaña **Claves SMTP** (No API Keys).
+4. Haz clic en **Generar una nueva clave SMTP**.
+5. Copia esa clave. Necesitarás:
+   - Tu email de login de Brevo (ej: `admin@colegio.com`).
+   - La clave que acabas de copiar.
 
 ---
 
 ## 🚀 Paso 2: Despliegue (Instalación)
 
-Elige **una** de las dos opciones siguientes.
+1. Sube los archivos de este proyecto a tu propia cuenta de GitHub.
+2. Ve a tu panel de Vercel y crea un **Nuevo Proyecto** importando ese repositorio.
+3. En la sección **Environment Variables**, añade estas 4 variables:
+   - **`BREVO_USER`**: Tu email de login en Brevo.
+   - **`BREVO_API_KEY`**: La clave SMTP que copiaste en el paso anterior.
+   - **`ADMIN_EMAIL`**: El correo del director/admin para entrar a la app.
+   - **`ADMIN_PASSWORD`**: Una contraseña segura para el admin.
 
-### Opción A: Importar desde Vercel (Recomendada)
-Esta opción es la que menos fallos da.
-
-1. Sube los archivos de este proyecto a tu propia cuenta de GitHub (crea un repositorio nuevo y sube los archivos).
-2. Ve a tu panel de Vercel ([vercel.com/dashboard](https://vercel.com/dashboard)).
-3. Haz clic en el botón negro **"Add New..."** -> **"Project"**.
-4. Verás tu repositorio de GitHub en la lista. Dale a **"Import"**.
-5. En la sección **Environment Variables**, añade **TRES** variables:
-   - **Key:** `RESEND_API_KEY` | **Value:** (Tu clave `re_...` de Resend).
-   - **Key:** `ADMIN_EMAIL`    | **Value:** (El correo del director/admin, ej: `director@escuela.com`).
-   - **Key:** `ADMIN_PASSWORD` | **Value:** (Una contraseña segura, ej: `MiEscuelaSegura2024`).
-6. Dale a **Deploy**.
-7. Una vez termine, ve a la pestaña **Storage** de tu proyecto en Vercel:
+4. Dale a **Deploy**.
+5. Una vez termine, ve a la pestaña **Storage** de tu proyecto en Vercel:
    - Dale a "Connect Store" -> "Postgres" -> "Create New".
    - Dale a "Connect Store" -> "Blob" -> "Create New".
-
-### Opción B: Usar el Botón de Despliegue Rápido
-**Nota:** Para que este botón funcione, debes estar viendo este archivo **desde tu propio repositorio** en GitHub, o editar el enlace manualmente.
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FTU_USUARIO%2FTU_REPOSITORIO&project-name=sinbullying-app&repository-name=sinbullying-app&env=RESEND_API_KEY,ADMIN_EMAIL,ADMIN_PASSWORD&envDescription=Clave%20Resend%2C%20Email%20Admin%20y%20Password%20Admin&stores=[{"type":"postgres"},{"type":"blob"}])
-
-*Si usas el botón, recuerda cambiar `TU_USUARIO/TU_REPOSITORIO` en la URL del navegador si falla.*
 
 ---
 
 ## ⚙️ Paso 3: Configuración Final
-Una vez que la web esté online (tendrás una URL tipo `sinbullying-app.vercel.app`):
+Una vez que la web esté online:
 
 1. **Crear las tablas:**
    - Abre en tu navegador: `https://TU-WEB.vercel.app/api/setup`
-   - Debes ver el mensaje: `{"message":"Tablas creadas correctamente"}`.
+   - Debes ver el mensaje de éxito confirmando la creación de tablas y sistema OTP.
 
 2. **Entrar como Admin:**
    - Ve a `https://TU-WEB.vercel.app/#/login`
    - Selecciona el rol **Admin**.
-   - Usa el email y contraseña que configuraste en las variables de entorno.
 
-3. **Restricción de Resend (Modo Prueba):**
-   - Si no has verificado un dominio propio en Resend (cuesta dinero o requiere conocimientos técnicos), Resend solo enviará emails a la dirección de correo con la que te registraste.
-   - **Para probar la app:** Cuando hagas un reporte como alumno, usa **tu propio email** (el de la cuenta de Resend) en el campo "Contacto". Así recibirás el código OTP.
-
----
 Hecho con ❤️ para ayudar a crear espacios seguros.
