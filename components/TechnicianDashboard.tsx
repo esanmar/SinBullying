@@ -222,21 +222,30 @@ const TechnicianDashboard: React.FC<Props> = ({ user }) => {
                                 </button>
                             ) : (
                                 <>
-                                    {selectedCase.status !== 'resuelto' && (
-                                        <button 
-                                            onClick={() => handleStatusUpdate(selectedCase.id, 'resuelto')}
-                                            className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 shadow-sm transition"
-                                        >
-                                            Marcar Resuelto
-                                        </button>
-                                    )}
-                                    {selectedCase.status !== 'revision' && selectedCase.status !== 'resuelto' && (
+                                    {selectedCase.status === 'resuelto' ? (
                                         <button 
                                             onClick={() => handleStatusUpdate(selectedCase.id, 'revision')}
-                                            className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 shadow-sm transition"
+                                            className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 shadow-sm transition"
                                         >
-                                            En Proceso
+                                            Reabrir Caso
                                         </button>
+                                    ) : (
+                                        <>
+                                            <button 
+                                                onClick={() => handleStatusUpdate(selectedCase.id, 'resuelto')}
+                                                className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 shadow-sm transition"
+                                            >
+                                                Marcar Resuelto
+                                            </button>
+                                            {selectedCase.status !== 'revision' && (
+                                                <button 
+                                                    onClick={() => handleStatusUpdate(selectedCase.id, 'revision')}
+                                                    className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 shadow-sm transition"
+                                                >
+                                                    En Proceso
+                                                </button>
+                                            )}
+                                        </>
                                     )}
                                 </>
                             )}
