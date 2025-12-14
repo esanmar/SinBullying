@@ -7,7 +7,7 @@ import AdminDashboard from './components/AdminDashboard';
 import TechnicianDashboard from './components/TechnicianDashboard';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import CookieBanner from './components/CookieBanner';
-import { Shield, LogOut, Users, FileText, CheckCircle, AlertTriangle, Briefcase, UserIcon } from './components/Icons';
+import { Shield, LogOut, Users, FileText, CheckCircle, AlertTriangle, Briefcase, UserIcon, GitHub } from './components/Icons';
 
 // --- PASSWORD RESET COMPONENT ---
 const ResetPasswordScreen = () => {
@@ -239,10 +239,14 @@ const AuthScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
                 />
             </div>
 
-            <div className="mt-12 pt-8 border-t border-white/20 flex flex-col sm:flex-row justify-between text-brand-200 text-sm">
+            <div className="mt-12 pt-8 border-t border-white/20 flex flex-col sm:flex-row justify-between items-center text-brand-200 text-sm">
                 <p>© {new Date().getFullYear()} SinBullying Platform. Open Source.</p>
-                <div className="flex space-x-4 mt-2 sm:mt-0">
+                <div className="flex items-center space-x-6 mt-4 sm:mt-0">
                     <Link to="/privacy" className="hover:text-white underline">Política de Privacidad</Link>
+                    <a href="https://github.com/esanmar/SinBullying" target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-white transition group" title="Ver código en GitHub">
+                        <GitHub className="w-5 h-5 mr-2 opacity-80 group-hover:opacity-100" />
+                        <span className="font-semibold">GitHub Repo</span>
+                    </a>
                 </div>
             </div>
         </div>
