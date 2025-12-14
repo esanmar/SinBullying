@@ -36,9 +36,10 @@ export default async function handler(req, res) {
             `;
 
             const resetLink = `${req.headers.origin}/#/reset-password?token=${resetToken}&email=${email}`;
-            
+            const sender = process.env.SENDER_EMAIL || process.env.BREVO_USER;
+
             await transporter.sendMail({
-                from: `"SinBullying Soporte" <${process.env.BREVO_USER}>`,
+                from: `"SinBullying Soporte" <${sender}>`,
                 to: email,
                 subject: 'Restablecer contraseña',
                 html: `
@@ -49,6 +50,7 @@ export default async function handler(req, res) {
                             Restablecer Contraseña
                         </a>
                         <p style="margin-top: 20px; font-size: 12px; color: #666;">Este enlace expira en 1 hora.</p>
+                        <p style="font-size: 12px; color: #999;">Si no has solicitado esto, puedes ignorar este correo.</p>
                     </div>
                 `
             });

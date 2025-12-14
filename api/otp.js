@@ -3,12 +3,12 @@ import nodemailer from 'nodemailer';
 
 // Configuración de Brevo SMTP
 const transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
-  port: 587,
-  secure: false, // true for 465, false for other ports
+  host: 'smtp-relay.brevo.com', // Host explícito
+  port: 587, // Puerto explícito
+  secure: false, // false para puerto 587 (STARTTLS)
   auth: {
-    user: process.env.BREVO_USER, // Email de login en Brevo
-    pass: process.env.BREVO_API_KEY, // Clave SMTP de Brevo
+    user: process.env.BREVO_USER, // Se leerá de las variables de entorno
+    pass: process.env.BREVO_API_KEY,
   },
 });
 
@@ -38,10 +38,13 @@ export default async function handler(req, res) {
         `;
 
         // Enviar Email con Brevo
+        // Nota: El remitente usará el identificador SMTP si no se especifica SENDER_EMAIL
+        const sender = process.env.SENDER_EMAIL || process.env.BREVO_USER;
+        
         await transporter.sendMail({
-            from: `"SinBullying Seguridad" <${process.env.BREVO_USER}>`,
+            from: `"SinBullying Seguridad" <${sender}>`,
             to: email,
-            subject: 'Tu código de verificación',
+            subject: 'Tu código de verificación - SinBullying',
             html: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
                     <h2 style="color: #2563eb; text-align: center;">Verificación de Identidad</h2>

@@ -5,10 +5,28 @@ Una plataforma de código abierto para que centros educativos gestionen reportes
 ![Licencia MIT](https://img.shields.io/badge/Licencia-MIT-green)
 ![Coste](https://img.shields.io/badge/Coste-100%25_Gratis-blue)
 
-## 💰 ¿Cuánto cuesta?
-Este proyecto está diseñado para funcionar **gratis** con las capas gratuitas de los proveedores:
-- **Vercel Plan Hobby:** Alojamiento, Base de Datos y Almacenamiento (Gratis para siempre).
-- **Brevo (Antes Sendinblue):** Envío de correos (300/día gratis), mucho más sencillo de configurar.
+## ⚙️ Configuración Rápida en Vercel
+
+Para que el envío de correos funcione con los datos de Brevo que tienes, debes configurar las siguientes **Variables de Entorno** en tu proyecto de Vercel (Settings -> Environment Variables):
+
+| Variable | Valor a introducir | Descripción |
+|----------|-------------------|-------------|
+| `BREVO_USER` | `9e04ca001@smtp-brevo.com` | Tu identificador de usuario SMTP |
+| `BREVO_API_KEY` | `mmomAWZF6Qzsk` | Tu contraseña SMTP (¡No la compartas!) |
+| `ADMIN_EMAIL` | *(Tu email)* | El email para entrar como administrador |
+| `ADMIN_PASSWORD` | *(Tu contraseña)* | La contraseña para el administrador |
+
+> **Nota:** La plataforma usará automáticamente `smtp-relay.brevo.com` y el puerto `587` basándose en esta configuración.
+
+---
+
+## 🚀 Despliegue (Instalación)
+
+1. Sube los archivos de este proyecto a tu cuenta de GitHub.
+2. Ve a [Vercel](https://vercel.com), crea un "New Project" e importa el repositorio.
+3. Añade las variables de entorno indicadas arriba.
+4. Una vez desplegado, ve a la pestaña **Storage** en Vercel y conecta una base de datos **Postgres** y un **Blob** (ambos gratuitos).
+5. Abre en tu navegador `https://TU-PROYECTO.vercel.app/api/setup` para crear las tablas automáticamente.
 
 ---
 
@@ -17,54 +35,5 @@ Este proyecto está diseñado para funcionar **gratis** con las capas gratuitas 
 - **Panel de Estudiante:** Reporte anónimo/identificado, subida de pruebas y chat WhatsApp.
 - **Panel de Administración:** Gestión de casos, asignación de técnicos y estadísticas.
 - **Seguridad:** Verificación por código (OTP) seguro en base de datos.
-
----
-
-## 📝 Paso 1: Crear Cuentas (Prerrequisitos)
-
-### 1. Crear cuenta en Vercel
-1. Ve a [vercel.com/signup](https://vercel.com/signup).
-2. Selecciona **"Hobby"**.
-3. Escribe tu nombre y elige **"Continue with GitHub"**.
-
-### 2. Obtener la Clave SMTP de Brevo
-Brevo es el servicio de email.
-1. Ve a [brevo.com](https://www.brevo.com/es/) y crea una cuenta gratuita.
-2. Arriba a la derecha, haz clic en tu nombre -> **SMTP & API**.
-3. Ve a la pestaña **Claves SMTP** (No API Keys).
-4. Haz clic en **Generar una nueva clave SMTP**.
-5. Copia esa clave. Necesitarás:
-   - Tu email de login de Brevo (ej: `admin@colegio.com`).
-   - La clave que acabas de copiar.
-
----
-
-## 🚀 Paso 2: Despliegue (Instalación)
-
-1. Sube los archivos de este proyecto a tu propia cuenta de GitHub.
-2. Ve a tu panel de Vercel y crea un **Nuevo Proyecto** importando ese repositorio.
-3. En la sección **Environment Variables**, añade estas 4 variables:
-   - **`BREVO_USER`**: Tu email de login en Brevo.
-   - **`BREVO_API_KEY`**: La clave SMTP que copiaste en el paso anterior.
-   - **`ADMIN_EMAIL`**: El correo del director/admin para entrar a la app.
-   - **`ADMIN_PASSWORD`**: Una contraseña segura para el admin.
-
-4. Dale a **Deploy**.
-5. Una vez termine, ve a la pestaña **Storage** de tu proyecto en Vercel:
-   - Dale a "Connect Store" -> "Postgres" -> "Create New".
-   - Dale a "Connect Store" -> "Blob" -> "Create New".
-
----
-
-## ⚙️ Paso 3: Configuración Final
-Una vez que la web esté online:
-
-1. **Crear las tablas:**
-   - Abre en tu navegador: `https://TU-WEB.vercel.app/api/setup`
-   - Debes ver el mensaje de éxito confirmando la creación de tablas y sistema OTP.
-
-2. **Entrar como Admin:**
-   - Ve a `https://TU-WEB.vercel.app/#/login`
-   - Selecciona el rol **Admin**.
 
 Hecho con ❤️ para ayudar a crear espacios seguros.
