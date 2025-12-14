@@ -1,30 +1,137 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
-import { getCurrentUser, login, logout } from './services/bkndService';
+import { HashRouter, Routes, Route, Navigate, Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { getCurrentUser, login, logout, registerUser, requestPasswordReset, resetPassword } from './services/bkndService';
 import { User, Role } from './types';
 import StudentDashboard from './components/StudentDashboard';
 import AdminDashboard from './components/AdminDashboard';
-import TechnicianDashboard from './components/TechnicianDashboard'; // New Import
+import TechnicianDashboard from './components/TechnicianDashboard';
 import { Shield, LogOut } from './components/Icons';
 
-// --- LOGIN COMPONENT ---
-const LoginScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
+// --- PASSWORD RESET COMPONENT ---
+const ResetPasswordScreen = () => {
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
+    const token = searchParams.get('token');
+    const email = searchParams.get('email');
+    
+    const [newPass, setNewPass] = useState('');
+    const [confirmPass, setConfirmPass] = useState('');
+    const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+    const [msg, setMsg] = useState('');
+
+    const handleReset = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (newPass !== confirmPass) {
+            setMsg("Las contraseñas no coinciden");
+            return;
+        }
+        if (!token || !email) {
+            setMsg("Enlace inválido");
+            return;
+        }
+
+        setStatus('loading');
+        try {
+            await resetPassword(email, token, newPass);
+            setStatus('success');
+            setTimeout(() => navigate('/login'), 3000);
+        } catch (e: any) {
+            setStatus('error');
+            setMsg(e.message || "Error al restablecer");
+        }
+    };
+
+    if (status === 'success') {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+                <div className="bg-white p-8 rounded-lg shadow text-center">
+                    <h2 className="text-2xl text-green-600 font-bold mb-4">¡Contraseña Actualizada!</h2>
+                    <p>Redirigiendo al login...</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+            <form onSubmit={handleReset} className="bg-white p-8 rounded-lg shadow w-full max-w-md">
+                <h2 className="text-xl font-bold mb-4">Nueva Contraseña</h2>
+                {msg && <p className="mb-4 text-red-500 text-sm">{msg}</p>}
+                <input 
+                    type="password" placeholder="Nueva contraseña" required 
+                    className="w-full border p-2 rounded mb-4"
+                    value={newPass} onChange={e => setNewPass(e.target.value)}
+                />
+                <input 
+                    type="password" placeholder="Confirmar contraseña" required 
+                    className="w-full border p-2 rounded mb-6"
+                    value={confirmPass} onChange={e => setConfirmPass(e.target.value)}
+                />
+                <button 
+                    disabled={status === 'loading'}
+                    className="w-full bg-brand-600 text-white py-2 rounded font-bold"
+                >
+                    {status === 'loading' ? 'Guardando...' : 'Cambiar Contraseña'}
+                </button>
+            </form>
+        </div>
+    );
+};
+
+// --- LOGIN & REGISTER COMPONENT ---
+const AuthScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  
+  // Form State
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState(''); // Estado para la contraseña
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState(''); // Only for register
   const [role, setRole] = useState<Role>('student');
+  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  const resetForm = () => {
+      setError('');
+      setSuccessMsg('');
+      setPassword('');
+      setName('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setSuccessMsg('');
+
     try {
-      // Pasamos password si el rol es admin
-      const user = await login(email, role, role === 'admin' ? password : undefined);
-      onLogin(user);
+      if (isForgotPassword) {
+          await requestPasswordReset(email);
+          setSuccessMsg("Si el email existe, recibirás un enlace para recuperar tu contraseña.");
+          setIsLoading(false);
+          return;
+      }
+
+      if (isLogin) {
+          const user = await login(email, role, password);
+          onLogin(user);
+      } else {
+          // Register (Only for Students via this form)
+          // Technicians are created by Admin usually, but we allow self-register for demo if role selected
+          if (role === 'admin') throw new Error("No puedes registrarte como Admin.");
+          
+          await registerUser({
+              email, password, name, role
+          });
+          
+          setSuccessMsg("Cuenta creada correctamente. Por favor inicia sesión.");
+          setIsLogin(true);
+          setPassword('');
+      }
     } catch (e: any) {
-      setError(e.message || "Error al iniciar sesión");
+      setError(e.message || "Error en la operación");
     } finally {
       setIsLoading(false);
     }
@@ -38,94 +145,127 @@ const LoginScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">SinBullying</h1>
-          <p className="text-brand-100">Plataforma segura contra el bullying</p>
+          <p className="text-brand-100">
+             {isForgotPassword ? 'Recuperar Contraseña' : isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
+          </p>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="p-8 space-y-4">
+          
+          {/* Role Selector (Always visible unless forgot password) */}
+          {!isForgotPassword && (
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Soy...</label>
+                <div className="grid grid-cols-3 gap-2">
+                <button
+                    type="button"
+                    onClick={() => setRole('student')}
+                    className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
+                    role === 'student' 
+                    ? 'border-brand-500 bg-brand-50 text-brand-700' 
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    }`}
+                >
+                    Estudiante
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setRole('technician')}
+                    className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
+                    role === 'technician' 
+                    ? 'border-brand-500 bg-brand-50 text-brand-700' 
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    }`}
+                >
+                    Técnico
+                </button>
+                <button
+                    type="button"
+                    disabled={!isLogin} // Admin can't register here
+                    onClick={() => setRole('admin')}
+                    className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
+                    role === 'admin' 
+                    ? 'border-brand-500 bg-brand-50 text-brand-700' 
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    } ${!isLogin ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                    Admin
+                </button>
+                </div>
+            </div>
+          )}
+
+          {!isLogin && !isForgotPassword && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                <input 
+                    type="text" required
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-brand-500"
+                    value={name} onChange={e => setName(e.target.value)}
+                />
+              </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
             <input 
               type="email" 
               required
-              placeholder="tu@escuela.edu"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand-500 outline-none transition"
+              placeholder="nombre@ejemplo.com"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-brand-500"
               value={email}
               onChange={e => setEmail(e.target.value)}
             />
           </div>
 
-          {/* Input de Contraseña: Solo visible para Admin */}
-          {role === 'admin' && (
-             <div className="animate-fade-in">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña de Administrador</label>
+          {!isForgotPassword && (
+             <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
                 <input 
                   type="password" 
                   required
                   placeholder="••••••••"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand-500 outline-none transition"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-brand-500"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                 />
              </div>
           )}
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Soy...</label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setRole('student')}
-                className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
-                  role === 'student' 
-                  ? 'border-brand-500 bg-brand-50 text-brand-700' 
-                  : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                }`}
-              >
-                Estudiante
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('technician')}
-                className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
-                  role === 'technician' 
-                  ? 'border-brand-500 bg-brand-50 text-brand-700' 
-                  : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                }`}
-              >
-                Técnico
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('admin')}
-                className={`py-2 px-1 rounded-lg border-2 text-sm font-medium transition ${
-                  role === 'admin' 
-                  ? 'border-brand-500 bg-brand-50 text-brand-700' 
-                  : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                }`}
-              >
-                Admin
-              </button>
-            </div>
-          </div>
             
-          {error && (
-              <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
-                  {error}
-              </div>
-          )}
+          {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">{error}</div>}
+          {successMsg && <div className="p-3 bg-green-50 text-green-600 text-sm rounded-lg border border-green-100">{successMsg}</div>}
 
           <button 
             type="submit" 
             disabled={isLoading}
             className="w-full bg-brand-600 text-white font-bold py-3 rounded-lg hover:bg-brand-700 transition shadow-lg disabled:opacity-70"
           >
-            {isLoading ? 'Entrando...' : 'Entrar'}
+            {isLoading ? 'Procesando...' : isForgotPassword ? 'Enviar enlace' : isLogin ? 'Entrar' : 'Registrarse'}
           </button>
+
+          {/* Footer Links */}
+          <div className="flex flex-col items-center space-y-2 mt-4 text-sm">
+              {!isForgotPassword && (
+                  <button type="button" onClick={() => { setIsForgotPassword(true); resetForm(); }} className="text-brand-600 hover:underline">
+                      ¿Olvidaste tu contraseña?
+                  </button>
+              )}
+              
+              {isForgotPassword ? (
+                  <button type="button" onClick={() => { setIsForgotPassword(false); resetForm(); }} className="text-gray-500 hover:text-gray-700">
+                      Volver al inicio
+                  </button>
+              ) : (
+                role !== 'admin' && (
+                    <button type="button" onClick={() => { setIsLogin(!isLogin); resetForm(); }} className="text-gray-500 hover:text-gray-700">
+                        {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia Sesión'}
+                    </button>
+                )
+              )}
+          </div>
+
         </form>
       </div>
-      <p className="mt-8 text-center text-gray-400 text-sm">
-        Powered by bknd & Vercel
-      </p>
     </div>
   );
 };
@@ -195,8 +335,11 @@ const App = () => {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/login" element={!user ? <LoginScreen onLogin={handleLogin} /> : <Navigate to="/" />} />
+        <Route path="/login" element={!user ? <AuthScreen onLogin={handleLogin} /> : <Navigate to="/" />} />
         
+        {/* Reset Password Route */}
+        <Route path="/reset-password" element={<ResetPasswordScreen />} />
+
         <Route path="/" element={
           user ? (
             <DashboardLayout user={user} onLogout={handleLogout}>

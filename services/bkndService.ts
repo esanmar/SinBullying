@@ -1,7 +1,6 @@
 import { BullyingCase, User, Role, CaseStatus, Evidence } from '../types';
 
 const CURRENT_USER_KEY = 'sinbullying_current_user';
-const OTPS_KEY = 'sinbullying_otps'; // Aún usamos localStorage para validar el código, pero el envío es real.
 
 // Helpers para llamadas API
 const api = async (endpoint: string, method: string = 'GET', body?: any) => {
@@ -24,42 +23,31 @@ const api = async (endpoint: string, method: string = 'GET', body?: any) => {
 // ==========================================
 
 export const login = async (email: string, role: Role, password?: string): Promise<User> => {
-  // 1. Admin Login (Server-side check of Env Var)
-  if (role === 'admin') {
-     try {
-        const adminUser = await api('auth', 'POST', { email, role: 'admin', password });
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(adminUser));
-        return adminUser;
-     } catch (e: any) {
-        console.error(e);
-        throw new Error(e.message || "Credenciales de Administrador incorrectas");
-     }
+  // Ahora TODOS los roles requieren contraseña
+  if (!password) {
+      throw new Error("La contraseña es obligatoria");
   }
 
-  // 2. Technicians (API Call)
-  if (role === 'technician') {
-      try {
-          const users = await api('users?role=technician');
-          const tech = users.find((u: User) => u.email === email);
-          
-          if (!tech) throw new Error("Técnico no encontrado");
-          
-          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(tech));
-          return tech;
-      } catch (e) {
-          throw new Error("Error verificando técnico");
-      }
+  try {
+    const user = await api('auth', 'POST', { email, role, password });
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    return user;
+  } catch (e: any) {
+    throw new Error(e.message || "Error de autenticación");
   }
+};
 
-  // 3. Students (Local)
-  const studentUser: User = {
-    id: `student_${email.replace(/[^a-zA-Z0-9]/g, '')}`,
-    name: 'Estudiante',
-    email,
-    role: 'student'
-  };
-  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(studentUser));
-  return studentUser;
+export const registerUser = async (data: any): Promise<User> => {
+    // Wrapper para registrar tanto estudiantes como técnicos
+    return api('users', 'POST', data);
+};
+
+export const requestPasswordReset = async (email: string): Promise<void> => {
+    return api('password', 'POST', { action: 'request', email });
+};
+
+export const resetPassword = async (email: string, token: string, newPassword: string): Promise<void> => {
+    return api('password', 'POST', { action: 'reset', email, token, newPassword });
 };
 
 export const logout = async (): Promise<void> => {
@@ -71,7 +59,8 @@ export const getCurrentUser = (): User | null => {
   return stored ? JSON.parse(stored) : null;
 };
 
-export const createTechnician = async (data: Omit<User, 'id' | 'role'>): Promise<User> => {
+// Admin Functions
+export const createTechnician = async (data: Omit<User, 'id' | 'role'> & { password?: string }): Promise<User> => {
     return api('users', 'POST', { ...data, role: 'technician' });
 };
 
@@ -84,18 +73,16 @@ export const getTechnicians = async (): Promise<User[]> => {
 // ==========================================
 
 export const uploadFile = async (file: File): Promise<Evidence> => {
-    // Usamos Vercel Blob vía API Route
     const response = await fetch(`/api/upload?filename=${file.name}`, {
         method: 'POST',
         body: file,
     });
 
     if (!response.ok) throw new Error('Error subiendo archivo');
-
     const blob = await response.json();
 
     return {
-        id: blob.url, // Usamos URL como ID en este caso simple
+        id: blob.url,
         fileName: file.name,
         fileType: file.type,
         url: blob.url
@@ -105,17 +92,16 @@ export const uploadFile = async (file: File): Promise<Evidence> => {
 export const createCase = async (data: Omit<BullyingCase, 'id' | 'status' | 'createdAt' | 'updatedAt'>): Promise<BullyingCase> => {
     const newCase = await api('cases', 'POST', data);
     
-    // Notificar al Admin (Opcional: En una app real, esto se haría en el backend para no bloquear)
-    // Usamos un email genérico de admin o obtenemos el del primer admin
+    // Notificación simple (best effort)
     try {
         await api('email', 'POST', {
             type: 'new_case',
-            to: 'admin_email_demo@example.com', // Reemplazar con variable de entorno en backend idealmente
+            to: 'admin_email_demo@example.com', 
             data: {
                 location: data.location,
                 description: data.description,
                 date: data.dateOfIncident,
-                url: window.location.origin // URL base de la app
+                url: window.location.origin
             }
         });
     } catch (e) {
@@ -130,8 +116,9 @@ export const getCases = async (): Promise<BullyingCase[]> => {
 };
 
 export const getCasesByStudent = async (studentId: string): Promise<BullyingCase[]> => {
-    // Filtramos en cliente para simplificar la API, o pasamos query params
     const all = await api('cases');
+    // Si el studentId es un UUID (usuario registrado) filtramos exacto,
+    // si no, podría ser lógica antigua, pero ahora asumimos registro.
     return all.filter((c: BullyingCase) => c.studentId === studentId);
 };
 
@@ -149,41 +136,32 @@ export const assignCaseToTechnician = async (caseId: string, technicianId: strin
 };
 
 // ==========================================
-// REAL 2FA VIA EMAIL
+// VERIFICATION
 // ==========================================
-
+// Mantenemos OTP para verificación de email en reportes (doble factor opcional)
 export const sendVerificationCode = async (email: string): Promise<boolean> => {
   const code = Math.floor(100000 + Math.random() * 900000).toString();
-  
-  // 1. Guardar código localmente (temporal para validación)
-  const otps = JSON.parse(localStorage.getItem(OTPS_KEY) || '{}');
-  otps[email] = code;
-  localStorage.setItem(OTPS_KEY, JSON.stringify(otps));
-
-  // 2. Enviar email real
   try {
       await api('email', 'POST', {
           type: 'otp',
           to: email,
           data: { code }
       });
+      // Guardar temporalmente en local para validar el input del usuario (en backend real se guardaría en DB/Redis)
+      sessionStorage.setItem(`otp_${email}`, code);
       return true;
   } catch (e) {
       console.error(e);
-      // Fallback para desarrollo si no hay API Key configurada
-      alert("Error enviando email (¿Falta API Key?). Revisa la consola para ver el código en modo dev.");
-      console.log(`[DEV MODE] OTP para ${email}: ${code}`);
       return false;
   }
 };
 
 export const verifyOTP = async (email: string, code: string): Promise<boolean> => {
   await new Promise(resolve => setTimeout(resolve, 500));
-  const otps = JSON.parse(localStorage.getItem(OTPS_KEY) || '{}');
-  if (otps[email] === code) {
-    delete otps[email];
-    localStorage.setItem(OTPS_KEY, JSON.stringify(otps));
-    return true;
+  const stored = sessionStorage.getItem(`otp_${email}`);
+  if (stored === code) {
+      sessionStorage.removeItem(`otp_${email}`);
+      return true;
   }
   return false;
 };
