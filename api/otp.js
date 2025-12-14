@@ -1,15 +1,21 @@
 import { sql } from '@vercel/postgres';
 import nodemailer from 'nodemailer';
 
-// Configuración de Brevo SMTP
+// Configuración de Brevo SMTP con Debugging activado
 const transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com', // Host explícito
-  port: 587, // Puerto explícito
+  host: 'smtp-relay.brevo.com',
+  port: 587,
   secure: false, // false para puerto 587 (STARTTLS)
   auth: {
-    user: process.env.BREVO_USER, // Se leerá de las variables de entorno
+    user: process.env.BREVO_USER,
     pass: process.env.BREVO_API_KEY,
   },
+  // Opciones críticas para depuración
+  logger: true, // Imprime en logs de Vercel
+  debug: true,  // Incluye datos del tráfico SMTP
+  connectionTimeout: 10000, // 10 segundos máximo para conectar
+  greetingTimeout: 5000,    // 5 segundos para esperar el saludo del servidor
+  socketTimeout: 10000      // 10 segundos si se corta la conexión
 });
 
 export default async function handler(req, res) {
@@ -37,25 +43,32 @@ export default async function handler(req, res) {
             VALUES (${email}, ${generatedCode}, ${expiresAt.toISOString()})
         `;
 
-        // Enviar Email con Brevo
-        // Nota: El remitente usará el identificador SMTP si no se especifica SENDER_EMAIL
-        const sender = process.env.SENDER_EMAIL || process.env.BREVO_USER;
+        // Determinar remitente
+        const sender = process.env.SENDER_EMAIL || process.env.ADMIN_EMAIL || process.env.BREVO_USER;
         
-        await transporter.sendMail({
-            from: `"SinBullying Seguridad" <${sender}>`,
-            to: email,
-            subject: 'Tu código de verificación - SinBullying',
-            html: `
-                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
-                    <h2 style="color: #2563eb; text-align: center;">Verificación de Identidad</h2>
-                    <p style="text-align: center; color: #4b5563;">Usa el siguiente código para completar tu reporte. Es válido por 10 minutos.</p>
-                    <div style="background: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
-                        <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e3a8a;">${generatedCode}</span>
+        console.log(`[OTP] Intentando enviar a: ${email} desde: ${sender}`);
+
+        try {
+            const info = await transporter.sendMail({
+                from: `"SinBullying Seguridad" <${sender}>`,
+                to: email,
+                subject: 'Tu código de verificación - SinBullying',
+                html: `
+                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
+                        <h2 style="color: #2563eb; text-align: center;">Verificación de Identidad</h2>
+                        <p style="text-align: center; color: #4b5563;">Usa el siguiente código para completar tu reporte. Es válido por 10 minutos.</p>
+                        <div style="background: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
+                            <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e3a8a;">${generatedCode}</span>
+                        </div>
+                        <p style="text-align: center; font-size: 12px; color: #9ca3af;">Si no has solicitado este código, ignora este mensaje.</p>
                     </div>
-                    <p style="text-align: center; font-size: 12px; color: #9ca3af;">Si no has solicitado este código, ignora este mensaje.</p>
-                </div>
-            `
-        });
+                `
+            });
+            console.log("[OTP] Enviado con éxito. ID:", info.messageId);
+        } catch (mailError) {
+            console.error("[OTP] ERROR FATAL SMTP:", mailError);
+            throw new Error(`Fallo SMTP: ${mailError.message}`);
+        }
 
         return res.status(200).json({ message: 'Código enviado correctamente' });
     }
@@ -84,7 +97,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Acción desconocida' });
 
   } catch (error) {
-    console.error("OTP Error:", error);
+    console.error("[OTP Handler Error]:", error);
     return res.status(500).json({ error: error.message });
   }
 }

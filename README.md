@@ -7,16 +7,17 @@ Una plataforma de código abierto para que centros educativos gestionen reportes
 
 ## ⚙️ Configuración Rápida en Vercel
 
-Para que el envío de correos funcione con los datos de Brevo que tienes, debes configurar las siguientes **Variables de Entorno** en tu proyecto de Vercel (Settings -> Environment Variables):
+Para que el envío de correos funcione, necesitas estas variables en Vercel.
 
-| Variable | Valor a introducir | Descripción |
-|----------|-------------------|-------------|
-| `BREVO_USER` | `9e04ca001@smtp-brevo.com` | Tu identificador de usuario SMTP |
-| `BREVO_API_KEY` | `mmomAWZF6Qzsk` | Tu contraseña SMTP (¡No la compartas!) |
-| `ADMIN_EMAIL` | *(Tu email)* | El email para entrar como administrador |
-| `ADMIN_PASSWORD` | *(Tu contraseña)* | La contraseña para el administrador |
+**IMPORTANTE:** El `BREVO_USER` suele ser un código (ej: 9e04ca...), pero para enviar correos necesitas usar una dirección de email real verificada en tu cuenta de Brevo. Por defecto la app intentará usar `ADMIN_EMAIL` como remitente, pero puedes forzar otro con `SENDER_EMAIL`.
 
-> **Nota:** La plataforma usará automáticamente `smtp-relay.brevo.com` y el puerto `587` basándose en esta configuración.
+| Variable | Descripción | Ejemplo |
+|----------|-------------|---------|
+| `BREVO_USER` | Tu identificador de usuario SMTP | `9e04ca001@smtp-brevo.com` |
+| `BREVO_API_KEY` | Tu contraseña SMTP | `mmomAWZF6Qzsk` |
+| `ADMIN_EMAIL` | Email del administrador (y remitente por defecto) | `director@colegio.com` |
+| `ADMIN_PASSWORD` | Contraseña para el panel admin | `SuperSecreto123` |
+| `SENDER_EMAIL` | *(Opcional)* Email remitente verificado en Brevo | `no-reply@colegio.com` |
 
 ---
 

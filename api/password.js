@@ -2,6 +2,7 @@ import { sql } from '@vercel/postgres';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 
+// Configuración de Brevo SMTP con Debugging activado
 const transporter = nodemailer.createTransport({
   host: 'smtp-relay.brevo.com',
   port: 587,
@@ -10,6 +11,12 @@ const transporter = nodemailer.createTransport({
     user: process.env.BREVO_USER,
     pass: process.env.BREVO_API_KEY,
   },
+  // Opciones críticas para depuración
+  logger: true,
+  debug: true,
+  connectionTimeout: 10000,
+  greetingTimeout: 5000,
+  socketTimeout: 10000
 });
 
 export default async function handler(req, res) {
@@ -36,24 +43,34 @@ export default async function handler(req, res) {
             `;
 
             const resetLink = `${req.headers.origin}/#/reset-password?token=${resetToken}&email=${email}`;
-            const sender = process.env.SENDER_EMAIL || process.env.BREVO_USER;
+            
+            // Determinar remitente: SENDER_EMAIL > ADMIN_EMAIL > BREVO_USER
+            const sender = process.env.SENDER_EMAIL || process.env.ADMIN_EMAIL || process.env.BREVO_USER;
 
-            await transporter.sendMail({
-                from: `"SinBullying Soporte" <${sender}>`,
-                to: email,
-                subject: 'Restablecer contraseña',
-                html: `
-                    <div style="font-family: sans-serif; padding: 20px;">
-                        <h2>Recuperación de Contraseña</h2>
-                        <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente botón:</p>
-                        <a href="${resetLink}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">
-                            Restablecer Contraseña
-                        </a>
-                        <p style="margin-top: 20px; font-size: 12px; color: #666;">Este enlace expira en 1 hora.</p>
-                        <p style="font-size: 12px; color: #999;">Si no has solicitado esto, puedes ignorar este correo.</p>
-                    </div>
-                `
-            });
+            console.log(`[PASSWORD] Intentando enviar reset a: ${email} desde: ${sender}`);
+
+            try {
+                const info = await transporter.sendMail({
+                    from: `"SinBullying Soporte" <${sender}>`,
+                    to: email,
+                    subject: 'Restablecer contraseña',
+                    html: `
+                        <div style="font-family: sans-serif; padding: 20px;">
+                            <h2>Recuperación de Contraseña</h2>
+                            <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente botón:</p>
+                            <a href="${resetLink}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">
+                                Restablecer Contraseña
+                            </a>
+                            <p style="margin-top: 20px; font-size: 12px; color: #666;">Este enlace expira en 1 hora.</p>
+                            <p style="font-size: 12px; color: #999;">Si no has solicitado esto, puedes ignorar este correo.</p>
+                        </div>
+                    `
+                });
+                console.log("[PASSWORD] Enviado con éxito. ID:", info.messageId);
+            } catch (mailError) {
+                console.error("[PASSWORD] ERROR FATAL SMTP:", mailError);
+                throw new Error(`Fallo SMTP: ${mailError.message}`);
+            }
         }
         
         // Siempre devolvemos éxito por seguridad (user enumeration prevention)
@@ -92,7 +109,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Acción desconocida' });
 
   } catch (error) {
-    console.error("Password Reset Error:", error);
+    console.error("[Password Reset Error]:", error);
     return res.status(500).json({ error: error.message });
   }
 }
