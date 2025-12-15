@@ -1,3 +1,51 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@media print {
+  body {
+    background-color: white;
+  }
+  
+  /* Ocultar elementos de navegación y UI al imprimir */
+  nav, 
+  .no-print, 
+  button, 
+  input, 
+  textarea, 
+  select,
+  .tabs-nav {
+    display: none !important;
+  }
+
+  /* Asegurar que el área imprimible sea visible y ocupe todo */
+  #printable-area, #printable-area * {
+    visibility: visible;
+  }
+  
+  #printable-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    background: white;
+    border: none;
+    box-shadow: none;
+  }
+
+  /* Forzar visualización de textos en negro */
+  p, h1, h2, h3, h4, span, div {
+    color: black !important;
+  }
+
+  /* Mostrar bordes para separar secciones en papel */
+  .section-print {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    page-break-inside: avoid;
+  }
+}

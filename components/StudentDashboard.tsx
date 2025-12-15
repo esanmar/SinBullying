@@ -3,12 +3,14 @@ import { createCase, uploadFile, getCasesByStudent, sendVerificationCode, verify
 import { Upload, CheckCircle, AlertTriangle, FileText, Calendar, MessageCircle, UserIcon, Edit } from './Icons';
 import { User, Evidence, BullyingCase, CaseLog } from '../types';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../hooks/useLanguage';
 
 interface Props {
   user: User;
 }
 
 const StudentDashboard: React.FC<Props> = ({ user }) => {
+  const { t } = useLanguage();
   // State for Tabs
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'profile'>('new');
   
@@ -248,8 +250,8 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
         <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
           <CheckCircle className="w-10 h-10" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">¡Reporte Enviado!</h2>
-        <p className="text-gray-600 mb-6">Gracias por tu valentía. El administrador ha sido notificado.</p>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('reportSuccess')}</h2>
+        <p className="text-gray-600 mb-6">{t('reportSuccessMsg')}</p>
         <button 
           onClick={() => {
             setSuccess(false);
@@ -259,7 +261,7 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
           }}
           className="bg-brand-600 text-white px-6 py-2 rounded-lg hover:bg-brand-700 transition"
         >
-          Ver mis reportes
+          {t('myReports')}
         </button>
       </div>
     );
@@ -268,21 +270,21 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
   return (
     <div className="max-w-3xl mx-auto">
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 mb-6 overflow-x-auto">
-        <button onClick={() => { setActiveTab('new'); setSelectedCase(null); }} className={`py-2 px-4 whitespace-nowrap font-medium text-sm focus:outline-none ${activeTab === 'new' ? 'border-b-2 border-brand-600 text-brand-600' : 'text-gray-500 hover:text-gray-700'}`}>Nuevo Reporte</button>
-        <button onClick={() => setActiveTab('history')} className={`py-2 px-4 whitespace-nowrap font-medium text-sm focus:outline-none ${activeTab === 'history' ? 'border-b-2 border-brand-600 text-brand-600' : 'text-gray-500 hover:text-gray-700'}`}>Mis Reportes</button>
-        <button onClick={() => { setActiveTab('profile'); setSelectedCase(null); }} className={`py-2 px-4 whitespace-nowrap font-medium text-sm focus:outline-none ${activeTab === 'profile' ? 'border-b-2 border-brand-600 text-brand-600' : 'text-gray-500 hover:text-gray-700'}`}>Mi Perfil</button>
+      <div className="flex border-b border-gray-200 mb-6 overflow-x-auto tabs-nav">
+        <button onClick={() => { setActiveTab('new'); setSelectedCase(null); }} className={`py-2 px-4 whitespace-nowrap font-medium text-sm focus:outline-none ${activeTab === 'new' ? 'border-b-2 border-brand-600 text-brand-600' : 'text-gray-500 hover:text-gray-700'}`}>{t('newReport')}</button>
+        <button onClick={() => setActiveTab('history')} className={`py-2 px-4 whitespace-nowrap font-medium text-sm focus:outline-none ${activeTab === 'history' ? 'border-b-2 border-brand-600 text-brand-600' : 'text-gray-500 hover:text-gray-700'}`}>{t('myReports')}</button>
+        <button onClick={() => { setActiveTab('profile'); setSelectedCase(null); }} className={`py-2 px-4 whitespace-nowrap font-medium text-sm focus:outline-none ${activeTab === 'profile' ? 'border-b-2 border-brand-600 text-brand-600' : 'text-gray-500 hover:text-gray-700'}`}>{t('myProfile')}</button>
       </div>
 
       {activeTab === 'profile' && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                  <UserIcon className="w-6 h-6 mr-2 text-brand-600" /> Editar Mi Perfil
+                  <UserIcon className="w-6 h-6 mr-2 text-brand-600" /> {t('myProfile')}
               </h2>
               <form onSubmit={handleProfileUpdate} className="space-y-4 max-w-lg">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">{t('name')}</label>
                           <input required type="text" className="w-full border rounded p-2" value={profileData.name} onChange={e => setProfileData({...profileData, name: e.target.value})} />
                       </div>
                       <div>
@@ -291,7 +293,7 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
                       </div>
                   </div>
                   <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{t('phone')}</label>
                       <input type="tel" className="w-full border rounded p-2" value={profileData.phone} onChange={e => setProfileData({...profileData, phone: e.target.value})} />
                   </div>
                   <div>
@@ -317,30 +319,30 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
             </div>
 
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                <div className="bg-brand-600 px-6 py-4"><h2 className="text-xl font-bold text-white">Detalles del Incidente</h2></div>
+                <div className="bg-brand-600 px-6 py-4"><h2 className="text-xl font-bold text-white">{t('incidentDetails')}</h2></div>
                 
                 {verificationStep === 'form' ? (
                     <form onSubmit={initiateVerification} className="p-6 space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">¿Qué sucedió? *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('whatHappened')} *</label>
                         <textarea required rows={4} className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-brand-500" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}/>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div><label className="block text-sm font-medium text-gray-700 mb-1">Fecha *</label><input type="date" required className="w-full border rounded-lg p-3 outline-none" value={formData.dateOfIncident} onChange={e => setFormData({...formData, dateOfIncident: e.target.value})}/></div>
-                        <div><label className="block text-sm font-medium text-gray-700 mb-1">Lugar *</label><input type="text" required className="w-full border rounded-lg p-3 outline-none" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})}/></div>
+                        <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('date')} *</label><input type="date" required className="w-full border rounded-lg p-3 outline-none" value={formData.dateOfIncident} onChange={e => setFormData({...formData, dateOfIncident: e.target.value})}/></div>
+                        <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('location')} *</label><input type="text" required className="w-full border rounded-lg p-3 outline-none" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})}/></div>
                     </div>
                     <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                        <h3 className="text-sm font-bold text-gray-700 mb-3">Datos de Contacto (Privado)</h3>
+                        <h3 className="text-sm font-bold text-gray-700 mb-3">{t('contactPrivate')}</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label className="block text-xs font-medium text-gray-500 mb-1">Email *</label><input type="email" required className="w-full border rounded-lg p-2 text-sm" value={formData.contactEmail} onChange={e => setFormData({...formData, contactEmail: e.target.value})}/></div>
-                            <div><label className="block text-xs font-medium text-gray-500 mb-1">Teléfono *</label><input type="tel" required className="w-full border rounded-lg p-2 text-sm" value={formData.contactPhone} onChange={e => setFormData({...formData, contactPhone: e.target.value})}/></div>
+                            <div><label className="block text-xs font-medium text-gray-500 mb-1">{t('email')} *</label><input type="email" required className="w-full border rounded-lg p-2 text-sm" value={formData.contactEmail} onChange={e => setFormData({...formData, contactEmail: e.target.value})}/></div>
+                            <div><label className="block text-xs font-medium text-gray-500 mb-1">{t('phone')} *</label><input type="tel" required className="w-full border rounded-lg p-2 text-sm" value={formData.contactPhone} onChange={e => setFormData({...formData, contactPhone: e.target.value})}/></div>
                         </div>
                     </div>
-                    <div><label className="block text-sm font-medium text-gray-700 mb-1">Personas involucradas</label><input type="text" className="w-full border rounded-lg p-3 outline-none" value={formData.involvedPeople} onChange={e => setFormData({...formData, involvedPeople: e.target.value})}/></div>
+                    <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('involved')}</label><input type="text" className="w-full border rounded-lg p-3 outline-none" value={formData.involvedPeople} onChange={e => setFormData({...formData, involvedPeople: e.target.value})}/></div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Evidencias</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('evidence')}</label>
                         <div className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer relative ${uploading ? 'bg-gray-100' : 'bg-gray-50 hover:bg-gray-100'}`}>
-                        {uploading ? <p className="text-sm text-brand-600 font-medium">Subiendo...</p> : <><input type="file" multiple accept="image/*,.pdf" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleFileChange} /><Upload className="w-8 h-8 text-gray-400 mb-2" /><p className="text-sm text-gray-500">Toca para subir archivos</p></>}
+                        {uploading ? <p className="text-sm text-brand-600 font-medium">Subiendo...</p> : <><input type="file" multiple accept="image/*,.pdf" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleFileChange} /><Upload className="w-8 h-8 text-gray-400 mb-2" /><p className="text-sm text-gray-500">{t('uploadHint')}</p></>}
                         </div>
                         {evidenceFiles.length > 0 && <div className="mt-4 grid grid-cols-4 gap-2">{evidenceFiles.map((file, idx) => <div key={idx} className="bg-gray-100 border p-2 rounded text-xs truncate">{file.fileName}</div>)}</div>}
                     </div>
@@ -348,10 +350,10 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
                     </form>
                 ) : (
                     <form onSubmit={handleFinalSubmit} className="p-8 text-center space-y-6">
-                        <h3 className="text-xl font-bold">Verificación de Seguridad</h3>
-                        <p className="text-gray-500">Código enviado a {formData.contactEmail}</p>
+                        <h3 className="text-xl font-bold">{t('verifyStep')}</h3>
+                        <p className="text-gray-500">{t('verifySent')} {formData.contactEmail}</p>
                         <input type="text" placeholder="000000" className="w-48 text-center text-2xl tracking-widest border-2 rounded-lg p-2 outline-none" maxLength={6} value={userEnteredCode} onChange={(e) => setUserEnteredCode(e.target.value)}/>
-                        <div className="flex space-x-3 justify-center"><button type="button" onClick={() => setVerificationStep('form')} className="px-6 py-2 border rounded-lg">Volver</button><button type="submit" disabled={loading} className="px-6 py-2 bg-brand-600 text-white rounded-lg">Verificar</button></div>
+                        <div className="flex space-x-3 justify-center"><button type="button" onClick={() => setVerificationStep('form')} className="px-6 py-2 border rounded-lg">Volver</button><button type="submit" disabled={loading} className="px-6 py-2 bg-brand-600 text-white rounded-lg">{t('verifyBtn')}</button></div>
                     </form>
                 )}
             </div>
@@ -371,7 +373,7 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
                         <div key={c.id} onClick={() => { setSelectedCase(c); setIsEditingCase(false); }} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition flex flex-col md:flex-row justify-between md:items-center gap-4">
                             <div>
                                 <div className="flex items-center space-x-2 mb-1">
-                                    <span className={`px-2 py-0.5 rounded text-xs uppercase font-bold ${c.status === 'resuelto' ? 'bg-green-100 text-green-700' : c.status === 'revision' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{c.status}</span>
+                                    <span className={`px-2 py-0.5 rounded text-xs uppercase font-bold ${c.status === 'resuelto' ? 'bg-green-100 text-green-700' : c.status === 'revision' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{t(`status_${c.status}` as any)}</span>
                                     <span className="text-xs text-gray-400">{new Date(c.createdAt).toLocaleDateString()}</span>
                                 </div>
                                 <p className="font-medium text-gray-800 line-clamp-1">{c.description}</p>
@@ -402,24 +404,24 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
 
                       <div className="p-6 space-y-6">
                             <div className="flex justify-between items-start">
-                                <h2 className="text-xl font-bold text-gray-800">Detalles del Caso</h2>
-                                <span className={`px-3 py-1 rounded text-sm uppercase font-bold ${selectedCase.status === 'resuelto' ? 'bg-green-100 text-green-700' : selectedCase.status === 'revision' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{selectedCase.status}</span>
+                                <h2 className="text-xl font-bold text-gray-800">{t('incidentDetails')}</h2>
+                                <span className={`px-3 py-1 rounded text-sm uppercase font-bold ${selectedCase.status === 'resuelto' ? 'bg-green-100 text-green-700' : selectedCase.status === 'revision' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{t(`status_${selectedCase.status}` as any)}</span>
                             </div>
 
                             {isEditingCase ? (
                                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 space-y-3">
                                     <h3 className="font-bold text-blue-800 text-sm">Editar Información</h3>
                                     <div>
-                                        <label className="text-xs font-bold text-gray-500">Descripción</label>
+                                        <label className="text-xs font-bold text-gray-500">{t('whatHappened')}</label>
                                         <textarea className="w-full p-2 border rounded h-24" value={editCaseForm.description || ''} onChange={e => setEditCaseForm({...editCaseForm, description: e.target.value})}/>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="text-xs font-bold text-gray-500">Fecha</label><input type="date" className="w-full p-2 border rounded" value={editCaseForm.dateOfIncident || ''} onChange={e => setEditCaseForm({...editCaseForm, dateOfIncident: e.target.value})}/></div>
-                                        <div><label className="text-xs font-bold text-gray-500">Ubicación</label><input className="w-full p-2 border rounded" value={editCaseForm.location || ''} onChange={e => setEditCaseForm({...editCaseForm, location: e.target.value})}/></div>
+                                        <div><label className="text-xs font-bold text-gray-500">{t('date')}</label><input type="date" className="w-full p-2 border rounded" value={editCaseForm.dateOfIncident || ''} onChange={e => setEditCaseForm({...editCaseForm, dateOfIncident: e.target.value})}/></div>
+                                        <div><label className="text-xs font-bold text-gray-500">{t('location')}</label><input className="w-full p-2 border rounded" value={editCaseForm.location || ''} onChange={e => setEditCaseForm({...editCaseForm, location: e.target.value})}/></div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="text-xs font-bold text-gray-500">Implicados</label><input className="w-full p-2 border rounded" value={editCaseForm.involvedPeople || ''} onChange={e => setEditCaseForm({...editCaseForm, involvedPeople: e.target.value})}/></div>
-                                        <div><label className="text-xs font-bold text-gray-500">Teléfono</label><input className="w-full p-2 border rounded" value={editCaseForm.contactPhone || ''} onChange={e => setEditCaseForm({...editCaseForm, contactPhone: e.target.value})}/></div>
+                                        <div><label className="text-xs font-bold text-gray-500">{t('involved')}</label><input className="w-full p-2 border rounded" value={editCaseForm.involvedPeople || ''} onChange={e => setEditCaseForm({...editCaseForm, involvedPeople: e.target.value})}/></div>
+                                        <div><label className="text-xs font-bold text-gray-500">{t('phone')}</label><input className="w-full p-2 border rounded" value={editCaseForm.contactPhone || ''} onChange={e => setEditCaseForm({...editCaseForm, contactPhone: e.target.value})}/></div>
                                     </div>
                                 </div>
                             ) : (
@@ -457,7 +459,7 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
 
                             {/* AUDIT LOG (Traceability) */}
                             <div className="border-t border-gray-200 pt-6 mt-6">
-                                <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Historial de Cambios</h4>
+                                <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">{t('auditTitle')}</h4>
                                 <div className="space-y-3">
                                     {loadingLogs ? <p className="text-xs text-gray-400">Cargando...</p> : 
                                      logs.length === 0 ? <p className="text-xs text-gray-400 italic">No hay modificaciones registradas.</p> : 

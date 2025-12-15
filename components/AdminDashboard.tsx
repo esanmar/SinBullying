@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { getCases, updateCaseStatus, getTechnicians, createTechnician, assignCaseToTechnician, updateTechnician, deleteTechnician, updateCaseFullDetails, getCaseLogs } from '../services/bkndService';
 import { BullyingCase, CaseStatus, User, CaseLog } from '../types';
 import { FileText, CheckCircle, AlertTriangle, Calendar, Filter, UserIcon, Users, UserPlus, Briefcase, Edit, Trash } from './Icons';
+import { useLanguage } from '../hooks/useLanguage';
 
 type Tab = 'cases' | 'technicians';
 
 const AdminDashboard: React.FC = () => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>('cases');
   const [cases, setCases] = useState<BullyingCase[]>([]);
   const [technicians, setTechnicians] = useState<User[]>([]);
@@ -52,6 +54,10 @@ const AdminDashboard: React.FC = () => {
   }, [selectedCase]);
 
   // --- ACTIONS ---
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   const handleStatusUpdate = async (id: string, newStatus: CaseStatus) => {
     const modifier = "Administrador";
@@ -195,38 +201,38 @@ const AdminDashboard: React.FC = () => {
     <div className="space-y-6">
       
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 no-print">
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition" onClick={() => setActiveTab('cases')}>
-          <p className="text-gray-500 text-xs uppercase font-semibold">Total Casos</p>
+          <p className="text-gray-500 text-xs uppercase font-semibold">{t('statsTotal')}</p>
           <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
         </div>
         <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-500">
-          <p className="text-red-500 text-xs uppercase font-semibold">Pendientes</p>
+          <p className="text-red-500 text-xs uppercase font-semibold">{t('statsPending')}</p>
           <p className="text-2xl font-bold text-gray-800">{stats.pending}</p>
         </div>
         <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500">
-          <p className="text-green-500 text-xs uppercase font-semibold">Resueltos</p>
+          <p className="text-green-500 text-xs uppercase font-semibold">{t('statsResolved')}</p>
           <p className="text-2xl font-bold text-gray-800">{stats.resolved}</p>
         </div>
         <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500 cursor-pointer hover:shadow-md transition" onClick={() => setActiveTab('technicians')}>
-          <p className="text-blue-500 text-xs uppercase font-semibold">Técnicos</p>
+          <p className="text-blue-500 text-xs uppercase font-semibold">{t('statsTechs')}</p>
           <p className="text-2xl font-bold text-gray-800">{stats.techs}</p>
         </div>
       </div>
 
       {/* Tabs Nav */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-gray-200 no-print tabs-nav">
           <button 
             onClick={() => setActiveTab('cases')}
             className={`px-4 py-2 font-medium text-sm flex items-center space-x-2 ${activeTab === 'cases' ? 'border-b-2 border-brand-600 text-brand-600' : 'text-gray-500'}`}
           >
-              <FileText className="w-4 h-4"/> <span>Gestión de Casos</span>
+              <FileText className="w-4 h-4"/> <span>{t('tabCases')}</span>
           </button>
           <button 
             onClick={() => setActiveTab('technicians')}
             className={`px-4 py-2 font-medium text-sm flex items-center space-x-2 ${activeTab === 'technicians' ? 'border-b-2 border-brand-600 text-brand-600' : 'text-gray-500'}`}
           >
-              <Users className="w-4 h-4"/> <span>Equipo Técnico</span>
+              <Users className="w-4 h-4"/> <span>{t('tabTeam')}</span>
           </button>
       </div>
 
@@ -234,7 +240,7 @@ const AdminDashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* List Column */}
-            <div className="lg:col-span-1 bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-[600px]">
+            <div className="lg:col-span-1 bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-[600px] no-print">
             <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
                 <h3 className="font-semibold text-gray-700">Casos</h3>
                 <div className="relative">
@@ -243,10 +249,10 @@ const AdminDashboard: React.FC = () => {
                         value={filter}
                         onChange={(e) => setFilter(e.target.value as any)}
                     >
-                        <option value="all">Todos</option>
-                        <option value="pendiente">Pendientes</option>
-                        <option value="revision">En Revisión</option>
-                        <option value="resuelto">Resueltos</option>
+                        <option value="all">{t('filterAll')}</option>
+                        <option value="pendiente">{t('filterPending')}</option>
+                        <option value="revision">{t('filterRevision')}</option>
+                        <option value="resuelto">{t('filterResolved')}</option>
                     </select>
                 </div>
             </div>
@@ -265,7 +271,7 @@ const AdminDashboard: React.FC = () => {
                         >
                             <div className="flex justify-between items-start mb-1">
                                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium uppercase ${getStatusColor(c.status)}`}>
-                                    {c.status}
+                                    {t(`status_${c.status}` as any)}
                                 </span>
                                 <span className="text-xs text-gray-400">{new Date(c.createdAt).toLocaleDateString()}</span>
                             </div>
@@ -281,10 +287,10 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Detail Column */}
-            <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 h-[600px] overflow-y-auto">
+            <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 h-[600px] overflow-y-auto" id="printable-area">
                 {selectedCase ? (
                     <div className="p-6">
-                        <div className="flex flex-col sm:flex-row justify-between items-start border-b pb-4 mb-4 gap-4">
+                        <div className="flex flex-col sm:flex-row justify-between items-start border-b pb-4 mb-4 gap-4 no-print">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-800 mb-1">Caso #{selectedCase.id.substring(0,8)}</h2>
                                 <div className="flex flex-wrap items-center text-sm text-gray-500 gap-4">
@@ -293,6 +299,9 @@ const AdminDashboard: React.FC = () => {
                                 </div>
                             </div>
                             <div className="flex space-x-2 shrink-0">
+                                <button onClick={handlePrint} className="px-3 py-1 bg-gray-800 text-white text-sm rounded hover:bg-gray-900 shadow-sm transition flex items-center">
+                                    <FileText className="w-4 h-4 mr-2" /> {t('printReport')}
+                                </button>
                                 {isEditing ? (
                                     <>
                                         <button onClick={() => setIsEditing(false)} className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400">Cancelar</button>
@@ -301,14 +310,14 @@ const AdminDashboard: React.FC = () => {
                                 ) : (
                                     <>
                                         <button onClick={startEditing} className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded hover:bg-blue-200 transition flex items-center">
-                                            <Edit className="w-4 h-4 mr-1" /> Editar Datos
+                                            <Edit className="w-4 h-4 mr-1" /> Editar
                                         </button>
                                         {selectedCase.status === 'resuelto' ? (
                                             <button 
                                                 onClick={() => handleStatusUpdate(selectedCase.id, 'revision')}
                                                 className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 shadow-sm transition"
                                             >
-                                                Reabrir Caso
+                                                Reabrir
                                             </button>
                                         ) : (
                                             <>
@@ -316,7 +325,7 @@ const AdminDashboard: React.FC = () => {
                                                     onClick={() => handleStatusUpdate(selectedCase.id, 'resuelto')}
                                                     className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 shadow-sm transition"
                                                 >
-                                                    Marcar Resuelto
+                                                    Resuelto
                                                 </button>
                                             </>
                                         )}
@@ -325,26 +334,38 @@ const AdminDashboard: React.FC = () => {
                             </div>
                         </div>
 
+                        {/* Printable Header ONLY visible on Print */}
+                        <div className="hidden print:block mb-8 text-center border-b pb-4">
+                            <h1 className="text-3xl font-bold">Informe de Incidente # {selectedCase.id.substring(0,8)}</h1>
+                            <p className="text-sm text-gray-500">SinBullying Platform - Reporte Generado el {new Date().toLocaleDateString()}</p>
+                        </div>
+
                         <div className="space-y-6">
                             
                             {/* Technician Assignment */}
                             {!isEditing && (
-                                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 section-print">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center">
                                             <Briefcase className="w-5 h-5 text-gray-500 mr-2" />
-                                            <h4 className="text-sm font-bold text-gray-700">Asignación de Técnico</h4>
+                                            <h4 className="text-sm font-bold text-gray-700">{t('assignTech')}</h4>
                                         </div>
                                         <select 
-                                            className="text-sm border-gray-300 border rounded-md p-2 w-64 focus:ring-brand-500 focus:border-brand-500"
+                                            className="text-sm border-gray-300 border rounded-md p-2 w-64 focus:ring-brand-500 focus:border-brand-500 no-print"
                                             value={selectedCase.assignedTechnicianId || ""}
                                             onChange={(e) => handleAssignTechnician(selectedCase.id, e.target.value)}
                                         >
-                                            <option value="">-- Sin Asignar --</option>
+                                            <option value="">{t('unassigned')}</option>
                                             {technicians.map(t => (
                                                 <option key={t.id} value={t.id}>{t.name} {t.lastName} ({t.center || 'Sin centro'})</option>
                                             ))}
                                         </select>
+                                        {/* Print View for Technician */}
+                                        <div className="hidden print:block">
+                                            {selectedCase.assignedTechnicianId ? 
+                                                technicians.find(t => t.id === selectedCase.assignedTechnicianId)?.name + ' ' + technicians.find(t => t.id === selectedCase.assignedTechnicianId)?.lastName 
+                                                : "Sin Asignar"}
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -382,9 +403,9 @@ const AdminDashboard: React.FC = () => {
                             ) : (
                                 <>
                                     {/* Read Only View */}
-                                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 section-print">
                                         <h4 className="text-sm font-bold text-blue-800 mb-2 flex items-center">
-                                            <UserIcon className="w-4 h-4 mr-2" /> Datos del Estudiante
+                                            <UserIcon className="w-4 h-4 mr-2" /> {t('contactPrivate')}
                                         </h4>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                             <div>
@@ -398,23 +419,27 @@ const AdminDashboard: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Descripción</h4>
+                                    <div className="section-print">
+                                        <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('descTitle')}</h4>
                                         <p className="text-gray-800 bg-gray-50 p-4 rounded-lg leading-relaxed border border-gray-100">
                                             {selectedCase.description}
                                         </p>
                                     </div>
                                     
-                                    <div>
-                                        <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Implicados</h4>
-                                        <p className="text-gray-800">{selectedCase.involvedPeople || "No especificado"}</p>
+                                    <div className="section-print">
+                                        <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('detailsTitle')}</h4>
+                                        <p className="text-gray-800">
+                                            <strong>Ubicación:</strong> {selectedCase.location}<br/>
+                                            <strong>Fecha:</strong> {selectedCase.dateOfIncident}<br/>
+                                            <strong>Implicados:</strong> {selectedCase.involvedPeople || "No especificado"}
+                                        </p>
                                     </div>
                                 </>
                             )}
 
                             {/* NOTAS DEL ESTUDIANTE */}
                             {selectedCase.studentNotes && (
-                                <div>
+                                <div className="section-print">
                                     <h4 className="text-sm font-semibold text-brand-600 uppercase tracking-wider mb-2">Notas del Estudiante</h4>
                                     <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg text-gray-800 italic">
                                         "{selectedCase.studentNotes}"
@@ -422,8 +447,8 @@ const AdminDashboard: React.FC = () => {
                                 </div>
                             )}
 
-                            <div>
-                                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Evidencias Adjuntas</h4>
+                            <div className="no-print">
+                                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('evidence')}</h4>
                                 {selectedCase.evidence && selectedCase.evidence.length > 0 ? (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                         {selectedCase.evidence.map((ev, idx) => (
@@ -446,9 +471,9 @@ const AdminDashboard: React.FC = () => {
                             </div>
 
                             {/* Admin View of Technician Actions */}
-                            <div className="border-t pt-4">
+                            <div className="border-t pt-4 section-print">
                                 <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-2">
-                                    Acciones del Técnico
+                                    {t('actionsTitle')}
                                 </h4>
                                 <div className="bg-gray-50 p-4 rounded border border-gray-200 min-h-[100px] text-gray-600">
                                     {selectedCase.technicianActions ? (
@@ -460,9 +485,9 @@ const AdminDashboard: React.FC = () => {
                             </div>
                             
                             {/* AUDIT LOG SECTION */}
-                            <div className="border-t border-gray-200 pt-6 mt-6">
+                            <div className="border-t border-gray-200 pt-6 mt-6 section-print">
                                 <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
-                                    Historial de Cambios (Trazabilidad)
+                                    {t('auditTitle')}
                                 </h4>
                                 <div className="space-y-3">
                                     {loadingLogs ? <p className="text-xs text-gray-400">Cargando historial...</p> : 
@@ -501,9 +526,9 @@ const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Technician Tab... (Same as before) */}
+      {/* Technician Tab... (Same as before, translated implicitly via common components usually, simplified here) */}
       {activeTab === 'technicians' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 no-print">
               <div className="p-6 border-b flex justify-between items-center">
                   <h3 className="text-lg font-bold text-gray-800">Listado de Técnicos</h3>
                   <button onClick={openNewTechForm} className="flex items-center space-x-2 bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition">
