@@ -204,30 +204,44 @@ const AuthScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
                     title={t('featStudent')}
                     icon={<UserIcon className="w-5 h-5"/>}
                     items={[
-                        t('newReport'),
-                        t('evidence'),
-                        "2FA (Email)",
-                        t('myProfile')
+                        t('featStudent_1'),
+                        t('featStudent_2'),
+                        t('featStudent_3'),
+                        t('featStudent_4'),
+                        t('featStudent_5')
                     ]} 
                 />
                 <FeatureSection 
                     title={t('featTech')}
                     icon={<Briefcase className="w-5 h-5"/>}
                     items={[
-                        t('tabCases'),
-                        t('assignTech'),
-                        "WhatsApp Integration",
-                        t('actionsTitle')
+                        t('featTech_1'),
+                        t('featTech_2'),
+                        t('featTech_3'),
+                        t('featTech_4'),
+                        t('featTech_5')
                     ]} 
                 />
                 <FeatureSection 
                     title={t('featAdmin')}
                     icon={<Users className="w-5 h-5"/>}
                     items={[
-                        t('statsTotal'),
-                        t('tabTeam'),
-                        t('auditTitle'),
-                        t('printReport')
+                        t('featAdmin_1'),
+                        t('featAdmin_2'),
+                        t('featAdmin_3'),
+                        t('featAdmin_4'),
+                        t('featAdmin_5')
+                    ]} 
+                />
+                <FeatureSection 
+                    title={t('featPrivacy')}
+                    icon={<CheckCircle className="w-5 h-5"/>}
+                    items={[
+                        t('featPrivacy_1'),
+                        t('featPrivacy_2'),
+                        t('featPrivacy_3'),
+                        t('featPrivacy_4'),
+                        t('featPrivacy_5')
                     ]} 
                 />
             </div>

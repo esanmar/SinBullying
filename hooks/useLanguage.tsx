@@ -20,11 +20,36 @@ const dictionary = {
     btnLogin: 'Iniciar Sesión',
     btnRegister: 'Crear Cuenta',
     landingTitle: 'SinBullying',
-    landingSubtitle: 'Plataforma integral para la gestión segura, privada y trazable de la convivencia escolar.',
+    landingSubtitle: 'Plataforma integral para la gestión segura, privada y trazable de la convivencia escolar. Conectamos estudiantes con orientadores para crear espacios seguros.',
+    
+    // Landing Features Detailed
     featStudent: 'Para Estudiantes',
+    featStudent_1: 'Reporte de casos seguro y confidencial.',
+    featStudent_2: 'Subida de evidencias (Fotos/PDF) comprimidas.',
+    featStudent_3: 'Seguridad reforzada con verificación 2FA (Email).',
+    featStudent_4: 'Gestión de perfil y seguimiento de estado.',
+    featStudent_5: 'Notas privadas para ampliar información.',
+
     featTech: 'Para Técnicos',
+    featTech_1: 'Panel de gestión de casos centralizado.',
+    featTech_2: 'Bolsa de casos y auto-asignación.',
+    featTech_3: 'Integración directa con WhatsApp.',
+    featTech_4: 'Bitácora de acciones y notas de intervención.',
+    featTech_5: 'Edición de reportes y seguimiento.',
+
     featAdmin: 'Administración',
+    featAdmin_1: 'Visión global y estadísticas en tiempo real.',
+    featAdmin_2: 'Gestión de usuarios y permisos.',
+    featAdmin_3: 'Trazabilidad total (Audit Logs) de cambios.',
+    featAdmin_4: 'Supervisión y reasignación de casos.',
+    featAdmin_5: 'Notificaciones automáticas por email.',
+
     featPrivacy: 'Privacidad y Seguridad',
+    featPrivacy_1: 'Cumplimiento con RGPD y Protección de Datos.',
+    featPrivacy_2: 'Encriptación de contraseñas.',
+    featPrivacy_3: 'Verificación de identidad anti-spam.',
+    featPrivacy_4: 'Historial inmutable de modificaciones.',
+    featPrivacy_5: 'Entorno seguro HTTPS.',
     
     // Dashboard Common
     logout: 'Cerrar Sesión',
@@ -91,11 +116,36 @@ const dictionary = {
     btnLogin: 'Login',
     btnRegister: 'Sign Up',
     landingTitle: 'NoBullying',
-    landingSubtitle: 'Comprehensive platform for secure, private, and traceable school coexistence management.',
+    landingSubtitle: 'Comprehensive platform for secure, private, and traceable school coexistence management. We connect students with counselors to create safe spaces.',
+    
+    // Landing Features Detailed
     featStudent: 'For Students',
+    featStudent_1: 'Secure and confidential case reporting.',
+    featStudent_2: 'Upload compressed evidence (Photos/PDF).',
+    featStudent_3: 'Reinforced security with 2FA verification (Email).',
+    featStudent_4: 'Profile management and status tracking.',
+    featStudent_5: 'Private notes for additional information.',
+
     featTech: 'For Technicians',
+    featTech_1: 'Centralized case management dashboard.',
+    featTech_2: 'Case pool and self-assignment.',
+    featTech_3: 'Direct integration with WhatsApp.',
+    featTech_4: 'Action logs and intervention notes.',
+    featTech_5: 'Report editing and follow-up.',
+
     featAdmin: 'Administration',
+    featAdmin_1: 'Global vision and real-time statistics.',
+    featAdmin_2: 'User and permission management.',
+    featAdmin_3: 'Total traceability (Audit Logs) of changes.',
+    featAdmin_4: 'Supervision and reassignment of cases.',
+    featAdmin_5: 'Automatic email notifications.',
+
     featPrivacy: 'Privacy & Security',
+    featPrivacy_1: 'GDPR compliance and Data Protection.',
+    featPrivacy_2: 'Password encryption.',
+    featPrivacy_3: 'Anti-spam identity verification.',
+    featPrivacy_4: 'Immutable modification history.',
+    featPrivacy_5: 'Secure HTTPS environment.',
 
     // Dashboard Common
     logout: 'Logout',
