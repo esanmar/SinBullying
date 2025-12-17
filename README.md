@@ -101,3 +101,112 @@ Una vez que el proyecto esté activo (verde):
 1.  Entra como **Administrador** usando el `ADMIN_EMAIL` y `ADMIN_PASSWORD` que configuraste.
 2.  Ve a la pestaña "Equipo Técnico" y crea cuentas para tus orientadores/psicólogos.
 3.  Comparte la URL con los estudiantes para que puedan registrarse o reportar casos.
+
+---
+---
+
+# 🇺🇸 English Version
+
+# 🛡️ Bullying Reporting Platform (SinBullying)
+
+**SinBullying** is a comprehensive, secure, and open-source web platform designed for educational centers to manage school bullying incidents. It facilitates communication between students and the counseling team, ensuring privacy and traceability for every case.
+
+![MIT License](https://img.shields.io/badge/License-MIT-green)
+![Status](https://img.shields.io/badge/Status-Production-blue)
+![Tech](https://img.shields.io/badge/Tech-React_Node_Postgres-indigo)
+
+---
+
+## 🌟 Implemented Features
+
+### 👤 Role: Student
+*   **Case Reporting**: Intuitive form to describe incidents, location, and date.
+*   **Multimedia Evidence**: Upload images (with automatic compression) and PDF documents (up to 3 files).
+*   **Security Verification (OTP)**: Two-factor authentication system via email to validate the reporter's identity before submitting the case.
+*   **History Management**: View all submitted reports and their current status (Pending, In Review, Resolved).
+*   **Editing & Traceability**: Ability to edit details of an existing case. The system keeps a log of what changed and when.
+*   **Private Notes**: Space to add notes or further details to the case, visible to technicians.
+*   **Profile Management**: Edit personal data (Name, Phone) and change password.
+
+### 🛠️ Role: Technician / Counselor
+*   **Management Dashboard**: Dual view to see "My Assigned Cases" and the "Case Pool" (pending).
+*   **Self-assignment**: Ability to pick cases from the general pool.
+*   **Action Log**: Rich text editor to record interventions (calls to parents, meetings, disciplinary measures).
+*   **Rapid Communication**: Direct links to WhatsApp to contact the student if a phone number was provided.
+*   **Full Audit**: View change history (Audit Logs) to see who modified the case and what data changed.
+
+### 👑 Role: Administrator
+*   **Global Vision**: Real-time statistics (Total cases, pending, resolved).
+*   **User Management**: Create, delete, and edit Technicians/Counselors.
+*   **Case Supervision**: Ability to edit any data of any case, reassign technicians, or change statuses.
+*   **Notifications**: Automatic email reception when a new case is created.
+
+### 🔒 Security and Privacy
+*   **GDPR**: Integrated Cookie Banner and Privacy Policy with mandatory acceptance check.
+*   **Authentication**: Secure login and password recovery via email with one-time tokens.
+*   **Audit Logs (Traceability)**: Immutable system that records critical database changes (who changed what, old value, and new value).
+
+---
+
+## 🚀 Deployment Guide (Step-by-Step)
+
+This application is designed to be deployed for free on **Vercel** using their database services.
+
+### Step 1: Email Configuration (Brevo)
+To send verification codes (OTP) and notifications, you need an SMTP service. We will use Brevo (free 300 emails/day).
+
+1.  Register at [Brevo.com](https://www.brevo.com).
+2.  Verify your account and email.
+3.  Go to **Name > SMTP & API > SMTP Keys**.
+4.  Generate a new SMTP Key.
+    *   Copy the **User** (e.g., `your_email@smtp-brevo.com`).
+    *   Copy the **Password** (e.g., `xsmtp-jw8...`).
+5.  In **Senders & IP**, ensure you have a verified email (this will be the `SENDER_EMAIL`).
+
+### Step 2: Source Code (GitHub)
+1.  Create a repository in your GitHub account.
+2.  Upload all files from this project to the repository.
+
+### Step 3: Deploy on Vercel
+1.  Create an account at [Vercel.com](https://vercel.com).
+2.  Click **"Add New..." > "Project"**.
+3.  Import your GitHub repository.
+4.  In the project configuration ("Configure Project"), expand the **Environment Variables** section and add the following:
+
+| Variable | Description | Example Value |
+|----------|-------------|---------------|
+| `BREVO_USER` | Brevo SMTP User | `your_user@smtp-brevo.com` |
+| `BREVO_API_KEY` | Generated SMTP Key | `xsmtp-....` |
+| `ADMIN_EMAIL` | Email for Admin login | `director@school.com` |
+| `ADMIN_PASSWORD` | Admin Password | `Admin1234Secure` |
+| `SENDER_EMAIL` | Verified email in Brevo (sender) | `no-reply@school.com` |
+
+5.  Click **Deploy**.
+
+### Step 4: Database and Storage
+Once the project is deployed (it might fail the first time due to missing DB), go to your Vercel project dashboard:
+
+1.  Go to the **Storage** tab.
+2.  Click **Connect Store** and select **Postgres**.
+    *   Give it a name and select the nearest region.
+    *   Vercel will automatically add the database environment variables (`POSTGRES_URL`, etc.).
+3.  Click **Connect Store** again and select **Blob**.
+    *   This will be used to upload evidence images.
+    *   Vercel will add the `BLOB_READ_WRITE_TOKEN` variable.
+4.  Go to the **Deployments** tab, find the latest deployment, and click **Redeploy** (to pick up the new DB variables).
+
+### Step 5: Initialization
+Once the project is active (green):
+
+1.  Open your browser and visit: `https://YOUR-PROJECT.vercel.app/api/setup`
+2.  You should see a JSON message confirming that tables (`users`, `cases`, `otp_codes`, `case_audit_logs`) have been created correctly.
+
+All set! You can now access the application.
+
+---
+
+## 📝 Initial Usage
+
+1.  Log in as **Administrator** using the `ADMIN_EMAIL` and `ADMIN_PASSWORD` you configured.
+2.  Go to the "Technical Team" tab and create accounts for your counselors/psychologists.
+3.  Share the URL with students so they can register or report cases.
