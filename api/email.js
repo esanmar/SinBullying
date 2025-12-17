@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { sql } from '@vercel/postgres';
 
 // Configuración de Brevo SMTP con Debugging activado
 const transporter = nodemailer.createTransport({
@@ -23,18 +24,49 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { type, to, data } = req.body;
+    const { type, data } = req.body;
 
     if (type === 'new_case') {
         // Determinar remitente: SENDER_EMAIL > ADMIN_EMAIL > BREVO_USER
         const sender = process.env.SENDER_EMAIL || process.env.ADMIN_EMAIL || process.env.BREVO_USER;
         
-        console.log(`[EMAIL] Intentando enviar notificación a: ${to} desde: ${sender}`);
+        // Recopilar destinatarios: Admin + Técnicos
+        const recipients = new Set();
+
+        // 1. Agregar Admin
+        if (process.env.ADMIN_EMAIL) {
+            recipients.add(process.env.ADMIN_EMAIL);
+        }
+
+        // 2. Agregar Técnicos desde la Base de Datos
+        try {
+            const { rows } = await sql`SELECT email FROM users WHERE role = 'technician'`;
+            rows.forEach(row => {
+                if (row.email) recipients.add(row.email);
+            });
+        } catch (dbError) {
+            console.warn("[EMAIL] No se pudieron obtener emails de técnicos:", dbError);
+        }
+
+        // Si no hay destinatarios configurados, usamos el fallback del request (si existe, para pruebas)
+        if (recipients.size === 0 && req.body.to) {
+            recipients.add(req.body.to);
+        }
+
+        const toList = Array.from(recipients).join(',');
+
+        if (!toList) {
+            console.error("[EMAIL] No hay destinatarios para enviar el correo.");
+            // No fallamos la petición para no bloquear el frontend, pero logueamos el error
+            return res.status(200).json({ message: 'No recipients found' });
+        }
+
+        console.log(`[EMAIL] Intentando enviar notificación a: ${toList} desde: ${sender}`);
         
         try {
             const info = await transporter.sendMail({
                 from: `"SinBullying Alertas" <${sender}>`,
-                to: to,
+                to: toList,
                 subject: '🚨 NUEVO REPORTE DE BULLYING',
                 html: `
                     <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 8px;">

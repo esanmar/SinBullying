@@ -108,11 +108,10 @@ export const uploadFile = async (file: File): Promise<Evidence> => {
 export const createCase = async (data: Omit<BullyingCase, 'id' | 'status' | 'createdAt' | 'updatedAt'>): Promise<BullyingCase> => {
     const newCase = await api('cases', 'POST', data);
     
-    // Notificación al admin (ahora usa Brevo en el backend)
+    // Notificación al admin y a todos los técnicos
     try {
         await api('email', 'POST', {
             type: 'new_case',
-            to: 'admin_email_demo@example.com', // En backend se puede sobreescribir con env var
             data: {
                 location: data.location,
                 description: data.description,
@@ -121,7 +120,7 @@ export const createCase = async (data: Omit<BullyingCase, 'id' | 'status' | 'cre
             }
         });
     } catch (e) {
-        console.warn("No se pudo enviar notificación al admin:", e);
+        console.warn("No se pudo enviar notificación por email:", e);
     }
 
     return newCase;
