@@ -263,8 +263,8 @@ const AuthScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
                         />
                     </div>
 
-                    {/* Mobile Mockup Overlay */}
-                    <div className="absolute -bottom-8 -right-8 w-[28%] rounded-[2rem] border-[6px] border-gray-900 bg-gray-900 shadow-2xl transform rotate-3 group-hover:rotate-0 transition duration-700 delay-100 ease-out z-20 overflow-hidden">
+                    {/* Mobile Mockup Overlay - MOVED TO LEFT */}
+                    <div className="absolute -bottom-8 -left-8 w-[28%] rounded-[2rem] border-[6px] border-gray-900 bg-gray-900 shadow-2xl transform -rotate-3 group-hover:rotate-0 transition duration-700 delay-100 ease-out z-20 overflow-hidden">
                         <div className="h-full w-full bg-white rounded-[1.5rem] overflow-hidden relative">
                              {/* Notch simulation */}
                              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-4 bg-gray-900 rounded-b-lg z-30"></div>
