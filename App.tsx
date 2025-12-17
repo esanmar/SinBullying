@@ -83,7 +83,7 @@ const ResetPasswordScreen = () => {
 
 // --- FEATURE CARD COMPONENT ---
 const FeatureSection = ({ title, icon, items }: { title: string, icon: React.ReactNode, items: string[] }) => (
-    <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/10">
+    <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/10 h-full">
         <div className="flex items-center mb-4">
             <div className="bg-white/20 p-2 rounded-lg mr-3 text-white">
                 {icon}
@@ -93,7 +93,7 @@ const FeatureSection = ({ title, icon, items }: { title: string, icon: React.Rea
         <ul className="space-y-2">
             {items.map((item, idx) => (
                 <li key={idx} className="text-brand-100 text-sm flex items-start">
-                    <span className="mr-2 mt-1">•</span>
+                    <span className="mr-2 mt-1 text-xs">•</span>
                     <span>{item}</span>
                 </li>
             ))}
@@ -167,7 +167,7 @@ const AuthScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
       
       {/* LEFT COLUMN: LANDING INFO */}
-      <div className="lg:w-7/12 bg-brand-600 p-8 lg:p-16 flex flex-col order-2 lg:order-1 relative overflow-hidden">
+      <div className="lg:w-7/12 bg-brand-600 p-8 lg:p-12 xl:p-16 flex flex-col order-2 lg:order-1 relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
             <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -180,78 +180,113 @@ const AuthScreen = ({ onLogin }: { onLogin: (u: User) => void }) => {
             </svg>
         </div>
 
-        <div className="relative z-10">
-            <div className="flex justify-between items-start">
-                <div className="mb-10">
-                    <div className="flex items-center space-x-3 mb-6">
-                        <div className="bg-white/20 p-3 rounded-full backdrop-blur-md">
-                            <Shield className="w-8 h-8 text-white" />
+        <div className="relative z-10 flex flex-col h-full justify-between">
+            <div>
+                <div className="flex justify-between items-start mb-8">
+                    <div>
+                        <div className="flex items-center space-x-3 mb-4">
+                            <div className="bg-white/20 p-3 rounded-full backdrop-blur-md">
+                                <Shield className="w-8 h-8 text-white" />
+                            </div>
+                            <h1 className="text-3xl lg:text-4xl font-bold text-white tracking-tight">{t('landingTitle')}</h1>
                         </div>
-                        <h1 className="text-3xl lg:text-4xl font-bold text-white tracking-tight">{t('landingTitle')}</h1>
+                        <h2 className="text-xl text-brand-100 font-light leading-relaxed max-w-2xl">
+                            {t('landingSubtitle')}
+                        </h2>
                     </div>
-                    <h2 className="text-xl text-brand-100 font-light leading-relaxed max-w-2xl">
-                        {t('landingSubtitle')}
-                    </h2>
+                    <div className="flex space-x-2 shrink-0">
+                        <button onClick={() => setLanguage('es')} className={`px-2 py-1 text-xs rounded font-medium ${language === 'es' ? 'bg-white text-brand-600 shadow' : 'bg-brand-700 text-white/80 hover:bg-brand-500'}`}>ES</button>
+                        <button onClick={() => setLanguage('en')} className={`px-2 py-1 text-xs rounded font-medium ${language === 'en' ? 'bg-white text-brand-600 shadow' : 'bg-brand-700 text-white/80 hover:bg-brand-500'}`}>EN</button>
+                    </div>
                 </div>
-                <div className="flex space-x-2">
-                    <button onClick={() => setLanguage('es')} className={`px-2 py-1 text-xs rounded ${language === 'es' ? 'bg-white text-brand-600' : 'bg-brand-700 text-white'}`}>ES</button>
-                    <button onClick={() => setLanguage('en')} className={`px-2 py-1 text-xs rounded ${language === 'en' ? 'bg-white text-brand-600' : 'bg-brand-700 text-white'}`}>EN</button>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 mb-12">
+                    <FeatureSection 
+                        title={t('featStudent')}
+                        icon={<UserIcon className="w-5 h-5"/>}
+                        items={[
+                            t('featStudent_1'),
+                            t('featStudent_3'),
+                            t('featStudent_2')
+                        ]} 
+                    />
+                    <FeatureSection 
+                        title={t('featTech')}
+                        icon={<Briefcase className="w-5 h-5"/>}
+                        items={[
+                            t('featTech_1'),
+                            t('featTech_3'),
+                            t('featTech_4')
+                        ]} 
+                    />
+                    <FeatureSection 
+                        title={t('featAdmin')}
+                        icon={<Users className="w-5 h-5"/>}
+                        items={[
+                            t('featAdmin_1'),
+                            t('featAdmin_3'),
+                            t('featAdmin_5')
+                        ]} 
+                    />
+                    <FeatureSection 
+                        title={t('featPrivacy')}
+                        icon={<CheckCircle className="w-5 h-5"/>}
+                        items={[
+                            t('featPrivacy_1'),
+                            t('featPrivacy_2'),
+                            t('featPrivacy_4')
+                        ]} 
+                    />
+                </div>
+
+                {/* APP PREVIEW SCREENSHOTS */}
+                <div className="relative max-w-2xl mx-auto mt-6 hidden sm:block group">
+                    {/* Desktop Mockup */}
+                    <div className="relative rounded-xl overflow-hidden shadow-2xl border-4 border-gray-800 bg-gray-800 transform -rotate-2 group-hover:rotate-0 transition duration-700 ease-out z-10">
+                        <div className="h-6 bg-gray-900 border-b border-gray-700 flex items-center space-x-1.5 px-3">
+                            <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
+                            <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                        </div>
+                        {/* 
+                            ATENCIÓN: Estas imágenes deben estar en la carpeta 'public' del proyecto.
+                            El usuario debe renombrar sus archivos a 'desktop-preview.png' y 'mobile-preview.png'
+                            o cambiar estos paths.
+                        */}
+                        <img 
+                            src="/desktop-preview.png" 
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://placehold.co/800x500/1e293b/FFF?text=Desktop+Preview';
+                            }}
+                            alt="SinBullying Desktop Dashboard" 
+                            className="w-full h-auto object-cover opacity-95 group-hover:opacity-100 transition"
+                        />
+                    </div>
+
+                    {/* Mobile Mockup Overlay */}
+                    <div className="absolute -bottom-8 -right-8 w-[28%] rounded-[2rem] border-[6px] border-gray-900 bg-gray-900 shadow-2xl transform rotate-3 group-hover:rotate-0 transition duration-700 delay-100 ease-out z-20 overflow-hidden">
+                        <div className="h-full w-full bg-white rounded-[1.5rem] overflow-hidden relative">
+                             {/* Notch simulation */}
+                             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-4 bg-gray-900 rounded-b-lg z-30"></div>
+                             <img 
+                                src="/mobile-preview.png" 
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = 'https://placehold.co/300x600/1e293b/FFF?text=Mobile';
+                                }}
+                                alt="SinBullying Mobile View" 
+                                className="w-full h-auto object-cover"
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FeatureSection 
-                    title={t('featStudent')}
-                    icon={<UserIcon className="w-5 h-5"/>}
-                    items={[
-                        t('featStudent_1'),
-                        t('featStudent_2'),
-                        t('featStudent_3'),
-                        t('featStudent_4'),
-                        t('featStudent_5')
-                    ]} 
-                />
-                <FeatureSection 
-                    title={t('featTech')}
-                    icon={<Briefcase className="w-5 h-5"/>}
-                    items={[
-                        t('featTech_1'),
-                        t('featTech_2'),
-                        t('featTech_3'),
-                        t('featTech_4'),
-                        t('featTech_5')
-                    ]} 
-                />
-                <FeatureSection 
-                    title={t('featAdmin')}
-                    icon={<Users className="w-5 h-5"/>}
-                    items={[
-                        t('featAdmin_1'),
-                        t('featAdmin_2'),
-                        t('featAdmin_3'),
-                        t('featAdmin_4'),
-                        t('featAdmin_5')
-                    ]} 
-                />
-                <FeatureSection 
-                    title={t('featPrivacy')}
-                    icon={<CheckCircle className="w-5 h-5"/>}
-                    items={[
-                        t('featPrivacy_1'),
-                        t('featPrivacy_2'),
-                        t('featPrivacy_3'),
-                        t('featPrivacy_4'),
-                        t('featPrivacy_5')
-                    ]} 
-                />
-            </div>
-
-            <div className="mt-12 pt-8 border-t border-white/20 flex flex-col sm:flex-row justify-between items-center text-brand-200 text-sm">
+            <div className="mt-16 pt-6 border-t border-white/20 flex flex-col sm:flex-row justify-between items-center text-brand-200 text-xs sm:text-sm">
                 <p>© {new Date().getFullYear()} SinBullying Platform. Open Source.</p>
                 <div className="flex items-center space-x-6 mt-4 sm:mt-0">
-                    <Link to="/privacy" className="hover:text-white underline">Política de Privacidad</Link>
+                    <Link to="/privacy" className="hover:text-white underline transition">Política de Privacidad</Link>
                     <a href="https://github.com/esanmar/SinBullying" target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-white transition group" title="Ver código en GitHub">
-                        <GitHub className="w-5 h-5 mr-2 opacity-80 group-hover:opacity-100" />
+                        <GitHub className="w-4 h-4 mr-2 opacity-80 group-hover:opacity-100" />
                         <span className="font-semibold">GitHub Repo</span>
                     </a>
                 </div>
