@@ -94,7 +94,9 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
 
   // --- IMAGE COMPRESSION UTILS ---
   const compressImage = async (file: File): Promise<File> => {
-    if (!file.type.startsWith('image/') || file.size < 300 * 1024) return file;
+    // Si no es imagen o es un GIF (que no queremos estropear la animación), devolvemos el original
+    if (!file.type.startsWith('image/') || file.type === 'image/gif') return file;
+    
     return new Promise((resolve, reject) => {
         const img = new Image();
         const reader = new FileReader();
@@ -106,14 +108,28 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
             const MAX_HEIGHT = 1280;
             let width = img.width;
             let height = img.height;
-            if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
-            else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
-            canvas.width = width; canvas.height = height;
+            
+            if (width > height) { 
+                if (width > MAX_WIDTH) { 
+                    height *= MAX_WIDTH / width; 
+                    width = MAX_WIDTH; 
+                } 
+            } else { 
+                if (height > MAX_HEIGHT) { 
+                    width *= MAX_HEIGHT / height; 
+                    height = MAX_HEIGHT; 
+                } 
+            }
+            
+            canvas.width = width; 
+            canvas.height = height;
             ctx?.drawImage(img, 0, 0, width, height);
+            
+            // Comprimimos a JPEG con calidad 0.6 (balance ideal peso/calidad)
             canvas.toBlob((blob) => {
                 if (!blob) { resolve(file); return; }
-                resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
-            }, 'image/jpeg', 0.7);
+                resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg', lastModified: Date.now() }));
+            }, 'image/jpeg', 0.6);
         };
         reader.onerror = error => reject(error);
         reader.readAsDataURL(file);
@@ -123,18 +139,34 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const filesArray = Array.from(e.target.files);
-      if (evidenceFiles.length + filesArray.length > 3) { alert("Máximo 3 archivos."); return; }
+      if (evidenceFiles.length + filesArray.length > 3) { 
+          alert("Máximo 3 archivos permitidos."); 
+          return; 
+      }
+      
       setUploading(true);
       try {
         const processedFiles = await Promise.all(
             filesArray.map(async (f: File) => {
-                if (f.size > 4.5 * 1024 * 1024) throw new Error(`El archivo ${f.name} es demasiado grande.`);
-                return await compressImage(f);
+                // Comprimimos si es imagen
+                const compressed = await compressImage(f);
+                
+                // Verificamos tamaño post-compresión (Límite final de 4MB por archivo para el servidor)
+                if (compressed.size > 4 * 1024 * 1024) {
+                    throw new Error(`El archivo ${f.name} sigue siendo demasiado grande incluso tras comprimirlo.`);
+                }
+                return compressed;
             })
         );
+        
         const uploaded = await Promise.all(processedFiles.map(f => uploadFile(f)));
         setEvidenceFiles(prev => [...prev, ...uploaded]);
-      } catch (error: any) { alert(error.message); } finally { setUploading(false); e.target.value = ''; }
+      } catch (error: any) { 
+          alert(error.message || "Error al procesar los archivos."); 
+      } finally { 
+          setUploading(false); 
+          e.target.value = ''; 
+      }
     }
   };
 
@@ -342,7 +374,7 @@ const StudentDashboard: React.FC<Props> = ({ user }) => {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">{t('evidence')}</label>
                         <div className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer relative ${uploading ? 'bg-gray-100' : 'bg-gray-50 hover:bg-gray-100'}`}>
-                        {uploading ? <p className="text-sm text-brand-600 font-medium">Subiendo...</p> : <><input type="file" multiple accept="image/*,.pdf" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleFileChange} /><Upload className="w-8 h-8 text-gray-400 mb-2" /><p className="text-sm text-gray-500">{t('uploadHint')}</p></>}
+                        {uploading ? <p className="text-sm text-brand-600 font-medium italic">Procesando y optimizando archivos...</p> : <><input type="file" multiple accept="image/*,.pdf" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleFileChange} /><Upload className="w-8 h-8 text-gray-400 mb-2" /><p className="text-sm text-gray-500">{t('uploadHint')}</p></>}
                         </div>
                         {evidenceFiles.length > 0 && <div className="mt-4 grid grid-cols-4 gap-2">{evidenceFiles.map((file, idx) => <div key={idx} className="bg-gray-100 border p-2 rounded text-xs truncate">{file.fileName}</div>)}</div>}
                     </div>

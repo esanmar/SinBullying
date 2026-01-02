@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type Language = 'es' | 'en';
@@ -205,7 +206,9 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export const LanguageProvider = ({ children }: { children: ReactNode }) => {
+// Fix: Making children optional to resolve the TypeScript error in App.tsx: 
+// "Property 'children' is missing in type '{}' but required in type '{ children: ReactNode; }'"
+export const LanguageProvider = ({ children }: { children?: ReactNode }) => {
   const [language, setLanguage] = useState<Language>('es');
 
   const t = (key: keyof typeof dictionary.es) => {
